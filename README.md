@@ -1,12 +1,10 @@
-# x
-
-Application server for project pi.
+# Project Pi
 
 This is a hyper local, ephemeral information platform.
 
-It's like a hyper local reddit.
+It's like a local reddit.
 
-You cannot choose what information you see, it is based on your location.
+You cannot choose what information you see, it is based on your location. It is not primarily topic-driven.
 
 The 'information radius' is a function of the usage and population density of your location.
 
