@@ -1,6 +1,16 @@
 # x
 
-A Clojure library designed to ... well, that part is up to you.
+Application server for project pi.
+
+This is a hyper local, ephemeral information platform.
+
+It's like a hyper local reddit.
+
+You cannot choose what information you see, it is based on your location.
+
+The 'information radius' is a function of the usage and population density of your location.
+
+
 http://en.wikipedia.org/wiki/Local_knowledge_problem
 
 ## Usage
