@@ -1,6 +1,7 @@
 # x
 
 A Clojure library designed to ... well, that part is up to you.
+http://en.wikipedia.org/wiki/Local_knowledge_problem
 
 ## Usage
 

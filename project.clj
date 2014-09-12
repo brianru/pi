@@ -1,4 +1,4 @@
-(defproject x "0.1.0-SNAPSHOT"
+(defproject pi "0.1.0-SNAPSHOT"
   :description "Hyper Local Information"
   :url "http://example.com/FIXME"
   :license {:name "MIT"

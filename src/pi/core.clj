@@ -1,4 +1,4 @@
-(ns x.core)
+(ns pi.core)
 
 (defn foo
   "I don't do a whole lot."
