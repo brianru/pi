@@ -7,18 +7,23 @@
 (defn- now [] 
   (quot (.getTime (js/Date.)) 1000))
 
+(def max-id (atom 0))
+(def cur-loc (atom {:latitude nil :longitude nil}))
+
 (defn- set-loc [x]
   (.log js/console x)
-  (.text location (str "lat: " js/x.coords.latitude ", "
-                        "long: " js/x.coords.longitude)))
+  (let [lat js/x.coords.latitude
+        lon js/x.coords.longitude]
+    (swap! cur-loc #(merge % {:latitude lat :longitude lon}))
+    (.log js/console (.-state cur-loc))
+    (.text location (str "lat: " lat ", "
+                         "long: " lon))))
 
 (defn- loc [] 
   (if (.hasOwnProperty js/navigator "geolocation")
     (.getCurrentPosition js/navigator.geolocation set-loc)))
 
 (loc)
-
-(def max-id (atom 0))
 
 (defn add-msg [msg]
   (let [t (str "<span class=\"time\">" (- (now) (.-time msg))  "s ago</span>")
@@ -45,21 +50,22 @@
          (if (> (.-id msg) (.-state max-id))
            (do
              (add-msg msg)
+             (js/console.log msg)
              (swap! max-id #(.-id msg))))))))
 
-(defn reset-input [i]
+(defn reset-input []
   (.val i ""))
 
 (defn send-to-server []
   (let [msg (.trim js/$ (.val i))
         author (.trim js/$ (.val (js/$ "#name")))
-        ; location
-        payload (js-obj "msg" msg "author" author)]
-    (js/console.log msg author)
+        payload (js-obj "msg" msg
+                        "author" author
+                        "location" (clj->js (.-state cur-loc)))]
     (if msg
       (do
         (.send conn (.stringify js/JSON payload))
-        (reset-input i)
+        (reset-input)
         ))))
 
 (.click (js/$ "#send") send-to-server)
