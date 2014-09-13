@@ -3,6 +3,7 @@
   (:require [org.httpkit.server :refer :all]
             ; TODO would ring middleware file-info and json help?
             [clojure.data.json :as json]
+            [clojure.walk :refer [keywordize-keys]]
             (compojure [core :refer [defroutes GET POST]]
                        [route :refer [files not-found]]
                        [handler :refer [site]])
@@ -27,8 +28,10 @@
 
 (defn msg-received [msg]
     ;; TODO can we get rid of read-json call using middleware?
-  (let [data (json/read-str msg)]
+  (let [data (keywordize-keys (json/read-str msg))]
     ;(info "message received: " data)
+    (println data)
+    ;; NOTE this silently does nothing when there's no :msg key
     (when (:msg data)
       ; throws out an id in case dosync throws an exception
       (let [data (merge data {:time (now) :id (next-id)})]
