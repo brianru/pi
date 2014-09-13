@@ -1,4 +1,6 @@
 /target
+/static/main.js
+/static/jquery-1.7.2.js
 /classes
 /checkouts
 pom.xml
