@@ -2,7 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
-            [cljs.core.async :refer [put! chan <!]]
+            [cljs.core.async :refer [put! chan <! sliding-buffer]]
             [geo.core :as geo]))
 
 (enable-console-print!)
@@ -10,9 +10,19 @@
 (defn- now [] 
   (quot (.getTime (js/Date.)) 1000))
 
+(defn distance
+  "TODO I don't know if these numbers are correct.
+   What's the 4326 all about?"
+  [msg-loc]
+  (let [my-loc (.-state cur-loc)
+        pt1 (geo/point 4326 (:latitude my-loc) (:longitude my-loc))
+        pt2 (geo/point 4326 (.-latitude msg-loc) (.-longitude msg-loc))
+        dist (geo/distance-to pt1 pt2)]
+    (str dist "km")))
+
 (def app-state (atom {:max-id 0
-                      :cur-loc {:latitude nil
-                                :longitude nil}
+                      :location {:latitude 0
+                                 :longitude 0}
                       :post ""
                       :username ""
                       :messages []}))
@@ -20,6 +30,10 @@
 
 (defn display-location [{:keys [latitude longitude]}]
   (str "lat: " latitude ", long: " longitude))
+
+(defn parse-location [x]
+  {:latitude js/x.coords.latitude
+   :longitude js/x.coords.longitude})
 
 (defn handle-change [e owner {:keys [post]}]
   (om/set-state! owner :post (.. e -target -value)))
@@ -31,15 +45,34 @@
       (om/transact! app :messages #(conj % new-post))
       (om/set-state! owner :post ""))))
 
+(defn locateMe [locate]
+  (if (.hasOwnProperty js/navigator "geolocation")
+    (.getCurrentPosition js/navigator.geolocation
+                         #(put! locate (parse-location %)))))
+
 (defn messages-view [app owner]
   (reify
     om/IInitState
     (init-state [_]
-      {:post ""})
+      {:post ""
+       :locate (chan (sliding-buffer 3))})
+
+    om/IWillMount
+    (will-mount [_]
+      (let [locate (om/get-state owner :locate)]
+        (go (loop []
+              (let [location (<! locate)]
+                (om/transact! app :location  #(merge % location)))
+              (recur)))
+      (let [locate (om/get-state owner :locate)]
+        (locateMe locate) ;; init
+        ;; refresh every minute
+        (js/setInterval #(locateMe locate) 60000))))
+
     om/IRenderState
     (render-state [this state]
       (dom/div nil
-        (dom/h2 nil (display-location (:cur-loc app)))
+        (dom/h2 nil (display-location (:location app)))
         (apply dom/ul nil
                (om/build-all message-view (:messages app)
                              {:init-state state}))
@@ -71,15 +104,6 @@
 ;    (.getCurrentPosition js/navigator.geolocation set-loc)))
 ;(loc)
 ;
-;(defn distance
-;  "TODO I don't know if these numbers are correct.
-;   What's the 4326 all about?"
-;  [msg-loc]
-;  (let [my-loc (.-state cur-loc)
-;        pt1 (geo/point 4326 (:latitude my-loc) (:longitude my-loc))
-;        pt2 (geo/point 4326 (.-latitude msg-loc) (.-longitude msg-loc))
-;        dist (geo/distance-to pt1 pt2)]
-;    (str dist "km")))
 ;
 ;(defn add-msg [msg]
 ;  (js/console.log msg)
