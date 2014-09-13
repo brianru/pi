@@ -2,6 +2,7 @@
 /static/main.js
 /classes
 /checkouts
+/static/out
 pom.xml
 pom.xml.asc
 *.jar

@@ -5,6 +5,9 @@
             :url ""}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2322"]
+                 [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
+                 [om "0.7.3"]
+                 [prismatic/om-tools "0.3.2"]
                  [environ "1.0.0"]
                  [ring/ring-core "1.3.1"]
                  [javax.servlet/servlet-api "2.5"] ;dev only ?
@@ -16,8 +19,22 @@
   :min-lein-version "2.0.0"
   :main main
   :plugins [[lein-cljsbuild "1.0.3"]]
-  :cljsbuild {:builds [{:source-paths ["src-cljs"]
+  :cljsbuild {:builds [{:id "dev"
+                        :source-paths ["src-cljs"]
                         :compiler {:output-to "static/main.js"
-                                   :optimizations :whitespace
-                                   :pretty-print true}}]}
+                                   :output-dir "static/out"
+                                   :optimizations :none
+                                   :pretty-print true
+                                   :source-map true}}
+                       {:id "release"
+                        :source-paths ["src-cljs"]
+                        :compiler {:output-to "static/main.js"
+                                   :optimizations :advanced
+                                   :elide-asserts true
+                                   :pretty-print false
+                                   :output-wrapper false
+                                   :preamble ["react/react.min.js"]
+                                   :externs ["react/externs/react.js"]
+                                   :closure-warnings {:externs-validation :off
+                                                      :non-standard-jsdoc :off}}}]}
   )
