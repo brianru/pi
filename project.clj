@@ -11,6 +11,7 @@
                  [http-kit "2.1.18"]
                  [compojure "1.1.9"]
                  [org.clojure/data.json "0.2.5"]
+                 [geo-clj "0.3.15"]
                  ]
   :min-lein-version "2.0.0"
   :main main

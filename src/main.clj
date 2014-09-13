@@ -25,7 +25,8 @@
 (defonce all-msgs (ref [{:id (next-id)
                          :time (now)
                          :msg "woah! I can talk!"
-                         :author "dr. seuss"}]))
+                         :author "dr. seuss"
+                         :location {:latitude 0 :longitude 0}}]))
 
 (defn msg-received [msg]
     ;; TODO can we get rid of read-json call using middleware?

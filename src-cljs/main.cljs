@@ -1,4 +1,5 @@
-(ns main)
+(ns main
+  (:require [geo.core :as geo]))
 
 (def i (js/$ "#i"))
 (def history (js/$ "#history"))
@@ -11,24 +12,30 @@
 (def cur-loc (atom {:latitude nil :longitude nil}))
 
 (defn- set-loc [x]
-  (.log js/console x)
   (let [lat js/x.coords.latitude
         lon js/x.coords.longitude]
     (swap! cur-loc #(merge % {:latitude lat :longitude lon}))
-    (.log js/console (.-state cur-loc))
     (.text location (str "lat: " lat ", "
                          "long: " lon))))
 
 (defn- loc [] 
   (if (.hasOwnProperty js/navigator "geolocation")
     (.getCurrentPosition js/navigator.geolocation set-loc)))
-
 (loc)
 
+(defn distance [msg-loc]
+  (let [my-loc (.-state cur-loc)
+        pt1 (geo/point 4326 (:latitude my-loc) (:longitude my-loc))
+        pt2 (geo/point 4326 (.-latitude msg-loc) (.-longitude msg-loc))
+        dist (geo/distance-to pt1 pt2)]
+    (str dist "km")))
+
 (defn add-msg [msg]
+  (js/console.log msg)
   (let [t (str "<span class=\"time\">" (- (now) (.-time msg))  "s ago</span>")
+        dist (str "<span class=\"distance\">" (distance (.-location msg)) "</span>")
         author (str "<span class=\"author\">" (.-author msg) "</span>: ")]
-    (.append history (str "<li>" author (.-msg msg) t "</li>"))))
+    (.append history (str "<li>" author (.-msg msg) dist t "</li>"))))
 
 (def conn 
   (js/WebSocket. (str "ws://" js/document.location.host "/ws")))
