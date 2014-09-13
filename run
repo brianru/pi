@@ -4,7 +4,7 @@ mkdir classes
 
 CP="classes:$(lein classpath):examples/websocket/"
 
-PORT=9899 java -cp "$CP" \
+java -cp "$CP" \
     clojure.main -m main
 
 
