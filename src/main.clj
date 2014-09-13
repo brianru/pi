@@ -26,7 +26,7 @@
                          :time (now)
                          :msg "woah! I can talk!"
                          :author "dr. seuss"
-                         :location {:latitude 0 :longitude 0}}]))
+                         :location {:latitude 90 :longitude 0}}]))
 
 (defn msg-received [msg]
     ;; TODO can we get rid of read-json call using middleware?
