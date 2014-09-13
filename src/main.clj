@@ -74,5 +74,5 @@
 ;      resp)))
 
 (defn -main [& args]
-  (run-server (-> #'chatrootm site) {:port (env :port)}))
+  (run-server (-> #'chatrootm site) {:port (read-string (env :port))}))
   ;(info "server started. http://127.0.0.1:9899"))
