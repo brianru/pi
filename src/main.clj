@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [org.httpkit.server :refer :all]
             ; TODO would ring middleware file-info and json help?
+            [environ.core :refer [env]]
             [clojure.data.json :as json]
             [clojure.walk :refer [keywordize-keys]]
             (compojure [core :refer [defroutes GET POST]]
@@ -73,5 +74,5 @@
 ;      resp)))
 
 (defn -main [& args]
-  (run-server (-> #'chatrootm site) {:port (read-string (System/getenv "PORT"))}))
+  (run-server (-> #'chatrootm site) {:port (env :port)}))
   ;(info "server started. http://127.0.0.1:9899"))

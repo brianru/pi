@@ -26,7 +26,7 @@
     (.append history (str "<li>" author (.-msg msg) t "</li>"))))
 
 (def conn 
-  (js/WebSocket. "ws://project-pi.herokuapp.com/ws"))
+  (js/WebSocket. (str "ws://" js/document.location.host "/ws")))
 
 (set! (.-onopen conn)
   (fn [e]

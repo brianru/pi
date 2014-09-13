@@ -5,6 +5,7 @@
             :url ""}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2322"]
+                 [environ "1.0.0"]
                  [ring/ring-core "1.3.1"]
                  [javax.servlet/servlet-api "2.5"] ;dev only ?
                  [http-kit "2.1.18"]
