@@ -1,0 +1,22 @@
+body {
+    background: #FFFFFF;
+}
+.message-list > .message.row {
+    border: 1px solid #666666;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.message {
+    margin-bottom: 20px;
+}
+.btn {
+    width: 132px;
+}
+.message > .row:first-child {
+    font-size: 14px;
+}
+.message > .row:last-child {
+    font-size: 12px;
+}
