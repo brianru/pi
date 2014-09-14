@@ -1,19 +1,29 @@
 (ns main
   (:gen-class)
-  (:require [org.httpkit.server :refer :all]
+  (:require [clojure.core.async :refer [<! <!! chan go thread]]
+            [clojure.core.cache :as cache]
+            [org.httpkit.server :as kit]
+            [taoensso.sente :as s]
             ; TODO would ring middleware file-info and json help?
             [environ.core :refer [env]]
             [clojure.data.json :as json]
             [clojure.walk :refer [keywordize-keys]]
-            (compojure [core :refer [defroutes GET POST]]
+            (compojure [core :refer [defroutes GET POST routes]]
                        [route :refer [files not-found]]
                        [handler :refer [site]])
             ; TODO setup timbre for logging
             ))
 
+(let [{:keys [ch-recv send-fn ajax-post-fn
+              ajax-get-or-ws-handshake-fn]}
+      (s/make-channel-socket! {})]
+  (def ring-ajax-post ajax-post-fn)
+  (def ring-ajax-get-ws ajax-get-or-ws-handshake-fn)
+  (def ch-chsk ch-recv)
+  (def chsk-send! send-fn))
+
 (defn- now [] (quot (System/currentTimeMillis) 1000))
 
-; TODO what's an atom?
 (def clients (atom {}))
 
 (let [max-id (atom 0)]
@@ -28,53 +38,59 @@
                          :author "dr. seuss"
                          :location {:latitude 90 :longitude 0}}]))
 
-(defn msg-received [msg]
-    ;; TODO can we get rid of read-json call using middleware?
-  (let [data (keywordize-keys (json/read-str msg))]
-    ;(info "message received: " data)
-    (println data)
-    ;; NOTE this silently does nothing when there's no :msg key
-    (when (:msg data)
-      ; throws out an id in case dosync throws an exception
-      (let [data (merge data {:time (now) :id (next-id)})]
-        (dosync
-               (let [all-msgs* (conj @all-msgs data)
-                     total     (count all-msgs*)]
-                 (if (> total 100)
-                   (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
-                   (ref-set all-msgs all-msgs*))))))
-    (doseq [client (keys @clients)]
-      ;; send to all clients, clients handle filtering
-      ;; TODO can we get rid of json-str call using middleware?
-      (send! client (json/write-str @all-msgs)))))
+;(defn msg-received [msg]
+;    ;; TODO can we get rid of read-json call using middleware?
+;  (let [data (keywordize-keys (json/read-str msg))]
+;    ;(info "message received: " data)
+;    (println data)
+;    ;; NOTE this silently does nothing when there's no :msg key
+;    (when (:msg data)
+;      ; throws out an id in case dosync throws an exception
+;      (let [data (merge data {:time (now) :id (next-id)})]
+;        (dosync
+;               (let [all-msgs* (conj @all-msgs data)
+;                     total     (count all-msgs*)]
+;                 (if (> total 100)
+;                   (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
+;                   (ref-set all-msgs all-msgs*))))))
+;    (doseq [client (keys @clients)]
+;      ;; send to all clients, clients handle filtering
+;      ;; TODO can we get rid of json-str call using middleware?
+;      (send! client (json/write-str @all-msgs)))))
+;
+;(defn chat-handler [req]
+;  (with-channel req channel
+;    ;(info channel "connceted")
+;    ;; TODO what does this do?
+;    (swap! clients assoc channel true)
+;    ;; TODO what are these funny characters?
+;    (on-receive channel #'msg-received)
+;    (on-close channel (fn [status]
+;                        (swap! clients dissoc channel)
+;                       ;(info channel "closed, status" status)
+;                        ))))
 
-(defn chat-handler [req]
-  (with-channel req channel
-    ;(info channel "connceted")
-    ;; TODO what does this do?
-    (swap! clients assoc channel true)
-    ;; TODO what are these funny characters?
-    (on-receive channel #'msg-received)
-    (on-close channel (fn [status]
-                        (swap! clients dissoc channel)
-                        ;(info channel "closed, status" status)
-                        ))))
+(defn handle-event [event req]
+  (println "here" event req))
 
-;; FIXME naming wtf
-(defroutes chatrootm
-  (GET "/ws" [] chat-handler)
-  (files "" {:root "static"})
-  (not-found "<p>Page not found.</p>"))
+(defroutes server
+  (-> (routes
+        (GET "/ws" req (#'ring-ajax-get-ws req))
+        (POST "/ws" req (#'ring-ajax-post req))
+        (files "" {:root "static"})
+        (not-found "<p>Page not found.</p>"))
+      site))
 
-;(defn- wrap-request-logging [handler]
-;  (fn [{:keys [request-method uri] :as req}]
-;    (let [resp (handler req)]
-;      (info (name request-method) (:status resp)
-;            (if-let [qs (:query-string req)]
-;              (str uri "?" qs) uri))
-;      resp)))
+(defn event-loop
+  "Handle inbound events."
+  []
+  (go (loop [{:keys [client-uuid ring-req event]} (<! ch-chsk)]
+        (println event)
+        (thread (handle-event event ring-req))
+        (recur (<! ch-chsk)))))
 
 (defn -main [& args]
-  (run-server (-> #'chatrootm site) {:port (read-string (or (env :port)
-                                                            "9899"))}))
-  ;(info "server started. http://127.0.0.1:9899"))
+  (event-loop)
+  (let [port (read-string (or (env :port) "9899"))]
+    (println "Startingg server on port " port "...")
+    (kit/run-server #'server {:port port})))
