@@ -8,6 +8,7 @@
                  [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
                  [environ "1.0.0"]
                  [ring/ring-core "1.3.1"]
+                 [ring/ring-defaults "0.1.1"]
                  [javax.servlet/servlet-api "2.5"] ;dev only ?
                  [http-kit "2.1.18"]
                  [com.taoensso/sente "1.1.0"]

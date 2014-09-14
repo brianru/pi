@@ -13,7 +13,11 @@ http://en.wikipedia.org/wiki/Local_knowledge_problem
 
 ## Usage
 
-FIXME
+### Dependencies
+
+- Leiningen. That's it.
+
+### How To
 
 ## License
 

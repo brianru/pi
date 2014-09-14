@@ -4,6 +4,8 @@
             [clojure.core.cache :as cache]
             [org.httpkit.server :as kit]
             [taoensso.sente :as s]
+            [ring.middleware.defaults]
+            [ring.middleware.anti-forgery :as ring-anti-forgery]
             ; TODO would ring middleware file-info and json help?
             [environ.core :refer [env]]
             [clojure.data.json :as json]
@@ -14,13 +16,17 @@
             ; TODO setup timbre for logging
             ))
 
-(let [{:keys [ch-recv send-fn ajax-post-fn
-              ajax-get-or-ws-handshake-fn]}
+(let [{:keys [ch-recv
+              send-fn
+              ajax-post-fn
+              ajax-get-or-ws-handshake-fn
+              connected-uids]}
       (s/make-channel-socket! {})]
-  (def ring-ajax-post ajax-post-fn)
+  (def ring-ajax-post   ajax-post-fn)
   (def ring-ajax-get-ws ajax-get-or-ws-handshake-fn)
-  (def ch-chsk ch-recv)
-  (def chsk-send! send-fn))
+  (def ch-chsk          ch-recv)
+  (def chsk-send!       send-fn)
+  (def connected-uids   connected-uids))
 
 (defn- now [] (quot (System/currentTimeMillis) 1000))
 
@@ -76,16 +82,27 @@
 
 (defmethod handle-event :chsk/ping
   [event req]
-  (print event req))
+  nil)
 
 (defmethod handle-event :default
   [event req]
-  (print event req))
+  (println event))
 
 (defmethod handle-event :submit/post
-  [x y]
-  ;[{:keys [msg author location] :as event}]
-  (print x y))
+  [event req]
+  (let [{:keys [msg author location] :as post} (last event)]
+    (when msg
+      (let [data (merge post {:time (now) :id (next-id)})]
+        (println data)
+        (dosync
+          (let [all-msgs* (conj @all-msgs data)
+                total     (count all-msgs*)]
+            (if (> total 100)
+              (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
+              (ref-set all-msgs all-msgs*))))))
+    (doseq [uid (:any @connected-uids)]
+      (println uid)
+      (chsk-send! uid [:new/post data]))))
 
 
 (defroutes server
@@ -95,6 +112,12 @@
         (files "" {:root "static"})
         (not-found "<p>Page not found.</p>"))
       site))
+
+(def my-ring-handler
+  (let [ring-defaults-config
+        (assoc-in ring.middleware.defaults/site-defaults [:security :anti-forgery]
+          {:read-token (fn [req] (-> req :params :csrf-token))})]
+   (ring.middleware.defaults/wrap-defaults server ring-defaults-config)))
 
 (defn event-loop
   "Handle inbound events."
@@ -107,4 +130,4 @@
   (event-loop)
   (let [port (read-string (or (env :port) "9899"))]
     (println "Starting server on port" port "...")
-    (kit/run-server #'server {:port port})))
+    (kit/run-server (var my-ring-handler) {:port port})))

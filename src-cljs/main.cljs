@@ -9,11 +9,12 @@
 (enable-console-print!)
 
 ;; setup web socket handlers
-(let [{:keys [chsk ch-recv send-fn]}
-      (s/make-channel-socket! "/ws" {} {:type :auto})]
-  (def chsk chsk)
-  (def ch-chsk ch-rev)
-  (def chsk-send! send-fn))
+(let [{:keys [chsk ch-recv send-fn state]}
+      (s/make-channel-socket! "/ws" {:type :auto})]
+  (def chsk       chsk)
+  (def ch-chsk    ch-rev)
+  (def chsk-send! send-fn)
+  (def chsk-state state))
 
 (defn event-loop
   "Handle inbound events."
@@ -25,6 +26,28 @@
             ;; other sente events go here
             ))
         (recur))))
+
+;; FIXME refactor
+;(defmulti event-msg-handler :id) ; Dispatch on event-id
+;#+cljs
+;(do ; Client-side methods
+;  (defmethod event-msg-handler :default ; Fallback
+;    [{:as ev-msg :keys [event]}]
+;    (logf "Unhandled event: %s" event))
+;
+;  (defmethod event-msg-handler :chsk/state
+;    [{:as ev-msg :keys [?data]}]
+;    (if (= ?data {:first-open? true})
+;      (logf "Channel socket successfully established!")
+;      (logf "Channel socket state change: %s" ?data)))
+;
+;  (defmethod event-msg-handler :chsk/recv
+;    [{:as ev-msg :keys [?data]}]
+;    (logf "Push event from server: %s" ?data))
+;
+;  ;; Add your (defmethod handle-event-msg! <event-id> [ev-msg] <body>)s here...
+;  )
+
 
 (defn- now [] 
   (quot (.getTime (js/Date.)) 1000))
@@ -78,13 +101,15 @@
   (reify
     om/IRenderState
     (render-state [this _]
-      (print (om/get-state owner))
-      (dom/li nil
-        (dom/span nil (:msg message))
-        (dom/span nil (:author message))
-        ;; FIXME display distance, not location.
-        ;; must access global state
-        (dom/span nil (display-location (:location message)))))))
+      (dom/div #js {:className "row message"}
+        (dom/div #js {:className "row"}
+          (dom/div #js {:className "col-md-4"} (:msg message)))
+        (dom/div #js {:className "row"}
+          (dom/div #js {:className "col-md-2"} (:author message))
+          ;; FIXME display distance, not location.
+          ;; must access global state
+          (dom/div #js {:className "col-md-2 col-md-offset-8"}
+                    (display-location (:location message))))))))
 
 (defn messages-view [app owner]
   (reify
@@ -107,17 +132,26 @@
 
     om/IRenderState
     (render-state [this state]
-      (dom/div nil
+      (dom/div #js {:className "container"}
         (dom/h2 nil (display-location (:location app)))
-        (apply dom/ul nil
-               (om/build-all message-view (:messages app)
-                             {:init-state state}))
         (dom/div nil
-          (dom/input #js {:type "text" :ref "new-post"
-                          :value (:post state)
-                          :onChange #(handle-change % owner state)})
-          (dom/button #js {:onClick #(submit-post app owner)}
-                      "Submit"))))))
+          (dom/textarea #js {:ref "new-post"
+                             :className "form-control"
+                             :placeholder "What's happening in the neighborhood?"
+                             :rows "3"
+                             :value (:post state)
+                             :onChange #(handle-change % owner state)})
+          (dom/div #js {:className "row"}
+            (dom/div #js {:className "col-md-2"} (:username app))
+            (dom/div #js {:className "col-md-2 col-md-offset-8"}
+              (dom/button #js {:type "button"
+                               :className "btn btn-primary"
+                               :onClick #(submit-post app owner)}
+                          "Submit"))))
+        (apply dom/div #js {:className "message-list"}
+               (om/build-all message-view  (:messages app)
+                             {:init-state state}))
+                 ))))
 
 (comment
 (defn local-view [app owner]
