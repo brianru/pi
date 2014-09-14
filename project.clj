@@ -19,7 +19,9 @@
                  ]
   :min-lein-version "2.0.0"
   :main main
-  :plugins [[lein-cljsbuild "1.0.3"]]
+  :plugins [[lein-cljsbuild "1.0.3"]
+            [lein-marginalia "0.7.1"]]
+  :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src-cljs"]
                         :compiler {:output-to "static/main.js"

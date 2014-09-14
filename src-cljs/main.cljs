@@ -33,7 +33,7 @@
                       :location {:latitude 0
                                  :longitude 0}
                       :post ""
-                      :username ""
+                      :username "Señor Tester"
                       :messages [{:msg  "I can talk!"
                                   :author "Duudilus"
                                   :location {:latitude 90
@@ -60,12 +60,13 @@
   (om/set-state! owner :post (.. e -target -value)))
 
 (defn submit-post [app owner]
-  (let [msg (-> (om/get-node owner "new-post")
-                     .-value)
-        ;; FIXME get author and location data
-        post {:msg msg :author nil :location nil}]
+  (let [msg (-> (om/get-node owner "new-post") .-value)
+        author (:username @app)
+        loc (:location @app)
+        post {:msg msg :author author :location loc}]
     (when post
       (om/transact! app :messages #(conj % post))
+      (chsk-send! [:submit/post post])
       (om/set-state! owner :post ""))))
 
 (defn locateMe [locate]
@@ -76,11 +77,14 @@
 (defn message-view [message owner]
   (reify
     om/IRenderState
-    (render-state [this {:keys [msg author location]}]
+    (render-state [this _]
+      (print (om/get-state owner))
       (dom/li nil
-        (dom/span nil msg)
-        (dom/span nil author)
-        (dom/span nil location)))))
+        (dom/span nil (:msg message))
+        (dom/span nil (:author message))
+        ;; FIXME display distance, not location.
+        ;; must access global state
+        (dom/span nil (display-location (:location message)))))))
 
 (defn messages-view [app owner]
   (reify
@@ -135,8 +139,6 @@
   messages-view app-state
   {:target (. js/document (getElementById "messages"))})
 
-;(def conn 
-;  (js/WebSocket. (str "ws://" js/document.location.host "/ws")))
 ;
 ;(set! (.-onopen conn)
 ;  (fn [e]

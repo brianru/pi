@@ -70,8 +70,23 @@
 ;                       ;(info channel "closed, status" status)
 ;                        ))))
 
-(defn handle-event [event req]
-  (println "here" event req))
+(defmulti handle-event
+  "Handle events based on the event ID (keyword)."
+  (fn [[ev-id ev-arg] ring-req] ev-id))
+
+(defmethod handle-event :chsk/ping
+  [event req]
+  (print event req))
+
+(defmethod handle-event :default
+  [event req]
+  (print event req))
+
+(defmethod handle-event :submit/post
+  [x y]
+  ;[{:keys [msg author location] :as event}]
+  (print x y))
+
 
 (defroutes server
   (-> (routes
@@ -85,12 +100,11 @@
   "Handle inbound events."
   []
   (go (loop [{:keys [client-uuid ring-req event]} (<! ch-chsk)]
-        (println event)
         (thread (handle-event event ring-req))
         (recur (<! ch-chsk)))))
 
 (defn -main [& args]
   (event-loop)
   (let [port (read-string (or (env :port) "9899"))]
-    (println "Startingg server on port " port "...")
+    (println "Starting server on port" port "...")
     (kit/run-server #'server {:port port})))
