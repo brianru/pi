@@ -26,15 +26,15 @@
   :cljsbuild {:builds
                [{:id "dev"
                  :source-paths ["src-cljs"]
-                 :compiler {:output-to "resources/public/main.js"
-                            :output-dir "resources/public/out"
+                 :compiler {:output-to "resources/public/js/main.js"
+                            :output-dir "resources/public/js/out"
                             :optimizations :none
                             :pretty-print true
                             :source-map true}}
                 {:id "release"
                  :source-paths ["src-cljs"]
                  :compiler
-                   {:output-to "resources/public/main.js"
+                   {:output-to "resources/public/js/main.js"
                     :optimizations :advanced
                     :elide-asserts true
                     :pretty-print false

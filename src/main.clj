@@ -79,6 +79,7 @@
   (GET  "/chsk"    req (#'ring-ajax-get-ws req))
   (POST "/chsk"    req (#'ring-ajax-post req))
   (POST "/login"   req (login! req))
+
   (resources "/")
   (not-found "<p>Page not found.</p>"))
 

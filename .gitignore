@@ -1,10 +1,8 @@
 /target
-/resources/public/out
-/static/main.js
-/resources/public/main.js
+/resources/public/js/out
+/resources/public/js/main.js
 /classes
 /checkouts
-/static/out
 pom.xml
 pom.xml.asc
 *.jar
