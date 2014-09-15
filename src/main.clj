@@ -9,7 +9,7 @@
             [environ.core                 :refer [env]]
             [clojure.walk                 :refer [keywordize-keys]]
             (compojure [core              :refer [defroutes GET POST]]
-                       [route             :refer [resources not-found]])
+                       [route             :as route])
             ; TODO setup timbre for logging
             ))
 
@@ -79,9 +79,8 @@
   (GET  "/chsk"    req (#'ring-ajax-get-ws req))
   (POST "/chsk"    req (#'ring-ajax-post req))
   (POST "/login"   req (login! req))
-
-  (resources "/")
-  (not-found "<p>Page not found.</p>"))
+  (route/resources "/")
+  (route/not-found "<p>Page not found.</p>"))
 
 (def my-ring-handler
   (let [ring-defaults-config
