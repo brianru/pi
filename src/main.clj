@@ -1,18 +1,16 @@
 (ns main
   (:gen-class)
-  (:require [clojure.core.async :refer [<! <!! chan go thread]]
-            [clojure.core.cache :as cache]
-            [org.httpkit.server :as kit]
-            [taoensso.sente :as s]
+  (:require [clojure.core.async           :refer [<! <!! chan go thread]]
+            [clojure.core.cache           :as cache]
+            [org.httpkit.server           :as kit]
+            [taoensso.sente               :as s]
             [ring.middleware.defaults]
             [ring.middleware.anti-forgery :as ring-anti-forgery]
-            ; TODO would ring middleware file-info and json help?
-            [environ.core :refer [env]]
-            [clojure.data.json :as json]
-            [clojure.walk :refer [keywordize-keys]]
-            (compojure [core :refer [defroutes GET POST routes]]
-                       [route :refer [files not-found]]
-                       [handler :refer [site]])
+            [environ.core                 :refer [env]]
+            [clojure.data.json            :as json]
+            [clojure.walk                 :refer [keywordize-keys]]
+            (compojure [core              :refer [defroutes GET POST]]
+                       [route             :refer [files not-found]])
             ; TODO setup timbre for logging
             ))
 
@@ -44,90 +42,82 @@
                          :author "dr. seuss"
                          :location {:latitude 90 :longitude 0}}]))
 
-;(defn msg-received [msg]
-;    ;; TODO can we get rid of read-json call using middleware?
-;  (let [data (keywordize-keys (json/read-str msg))]
-;    ;(info "message received: " data)
-;    (println data)
-;    ;; NOTE this silently does nothing when there's no :msg key
-;    (when (:msg data)
-;      ; throws out an id in case dosync throws an exception
-;      (let [data (merge data {:time (now) :id (next-id)})]
-;        (dosync
-;               (let [all-msgs* (conj @all-msgs data)
-;                     total     (count all-msgs*)]
-;                 (if (> total 100)
-;                   (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
-;                   (ref-set all-msgs all-msgs*))))))
-;    (doseq [client (keys @clients)]
-;      ;; send to all clients, clients handle filtering
-;      ;; TODO can we get rid of json-str call using middleware?
-;      (send! client (json/write-str @all-msgs)))))
-;
-;(defn chat-handler [req]
-;  (with-channel req channel
-;    ;(info channel "connceted")
-;    ;; TODO what does this do?
-;    (swap! clients assoc channel true)
-;    ;; TODO what are these funny characters?
-;    (on-receive channel #'msg-received)
-;    (on-close channel (fn [status]
-;                        (swap! clients dissoc channel)
-;                       ;(info channel "closed, status" status)
-;                        ))))
+(defmulti event-msg-handler :id)
 
-(defmulti handle-event
-  "Handle events based on the event ID (keyword)."
-  (fn [[ev-id ev-arg] ring-req] ev-id))
+(defmethod event-msg-handler :default
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
+  (let [session (:session ring-req)
+        uid     (:uid     session)]
+    (println "Unhandled event: %s" event)
+    (println "uid:" uid)
+    (when-not (:dummy-reply-fn (meta ?reply-fn))
+      (?reply-fn {:umatched-event-as-echoed-from-from-server event}))))
 
-(defmethod handle-event :chsk/ping
-  [event req]
-  nil)
+(defmethod event-msg-handler :chsk/uidport-open [ev-msg] nil)
 
-(defmethod handle-event :default
-  [event req]
-  (println event))
+(defmethod event-msg-handler :chsk/ws-ping [ev-msg] nil)
 
-(defmethod handle-event :submit/post
-  [event req]
+(defmethod event-msg-handler :submit/post
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
+  (println event id ?data ring-req)
   (let [{:keys [msg author location] :as post} (last event)]
     (when msg
       (let [data (merge post {:time (now) :id (next-id)})]
-        (println data)
         (dosync
           (let [all-msgs* (conj @all-msgs data)
                 total     (count all-msgs*)]
             (if (> total 100)
               (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
-              (ref-set all-msgs all-msgs*))))))
-    (doseq [uid (:any @connected-uids)]
-      (println uid)
-      (chsk-send! uid [:new/post data]))))
+              (ref-set all-msgs all-msgs*))
+            (println @all-msgs)))
+        (doseq [uid (:any @connected-uids)]
+          (println "uid:" uid)
+          (chsk-send! uid [:new/post data]))))))
 
+(defn login! [ring-request]
+  (let [{:keys [session params]} ring-request
+        {:keys [user-id]} params]
+    (println "Login request: %s" params)
+    {:status 200 :session (assoc session :uid user-id)}))
 
 (defroutes server
-  (-> (routes
-        (GET "/ws" req (#'ring-ajax-get-ws req))
-        (POST "/ws" req (#'ring-ajax-post req))
-        (files "" {:root "static"})
-        (not-found "<p>Page not found.</p>"))
-      site))
+  (GET  "/ws"    req (#'ring-ajax-get-ws req))
+  (POST "/ws"    req (#'ring-ajax-post req))
+  (POST "/login" req (login! req))
+  (files ""      {:root "static"}) ;; TODO move to resources/public
+  (not-found "<p>Page not found.</p>"))
 
 (def my-ring-handler
   (let [ring-defaults-config
-        (assoc-in ring.middleware.defaults/site-defaults [:security :anti-forgery]
-          {:read-token (fn [req] (-> req :params :csrf-token))})]
+        (assoc-in ring.middleware.defaults/site-defaults
+                  [:security :anti-forgery]
+                  {:read-token (fn [req] (-> req :params :csrf-token))})]
    (ring.middleware.defaults/wrap-defaults server ring-defaults-config)))
 
-(defn event-loop
-  "Handle inbound events."
-  []
-  (go (loop [{:keys [client-uuid ring-req event]} (<! ch-chsk)]
-        (thread (handle-event event ring-req))
-        (recur (<! ch-chsk)))))
+
+;;;; Init
+
+(defonce http-server_ (atom nil))
+(defn stop-http-server! []
+  (when-let [stop-f @http-server_]
+    (stop-f :timeout 100)))
+
+(defn start-http-server! []
+  (stop-http-server!)
+  (let [port (read-string (or (env :port) "9899"))
+        s    (kit/run-server (var my-ring-handler) {:port port})]
+    (reset! http-server_ s)
+    (println "Http-kit server is running at `%s`" port)))
+
+(defonce router_ (atom nil))
+(defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))
+(defn start-router! []
+  (stop-router!)
+  (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler)))
+
+(defn start! []
+  (start-router!)
+  (start-http-server!))
 
 (defn -main [& args]
-  (event-loop)
-  (let [port (read-string (or (env :port) "9899"))]
-    (println "Starting server on port" port "...")
-    (kit/run-server (var my-ring-handler) {:port port})))
+  (start!))

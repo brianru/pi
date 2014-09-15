@@ -13,7 +13,8 @@
                  [http-kit "2.1.18"]
                  [com.taoensso/sente "1.1.0"]
                  [om "0.7.3"]
-                 ;;[prismatic/om-tools "0.3.2"]
+                 [secretary "1.2.1"]
+                 ;[hiccup "1.0.5"]
                  [compojure "1.1.9"]
                  [org.clojure/data.json "0.2.5"]
                  [geo-clj "0.3.15"]
@@ -23,22 +24,24 @@
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-marginalia "0.7.1"]]
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
-  :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src-cljs"]
-                        :compiler {:output-to "static/main.js"
-                                   :output-dir "static/out"
-                                   :optimizations :none
-                                   :pretty-print true
-                                   :source-map true}}
-                       {:id "release"
-                        :source-paths ["src-cljs"]
-                        :compiler {:output-to "static/main.js"
-                                   :optimizations :advanced
-                                   :elide-asserts true
-                                   :pretty-print false
-                                   :output-wrapper false
-                                   :preamble ["react/react.min.js"]
-                                   :externs ["react/externs/react.js"]
-                                   :closure-warnings {:externs-validation :off
-                                                      :non-standard-jsdoc :off}}}]}
+  :cljsbuild {:builds
+               [{:id "dev"
+                 :source-paths ["src-cljs"]
+                 :compiler {:output-to "static/main.js"
+                            :output-dir "static/out"
+                            :optimizations :none
+                            :pretty-print true
+                            :source-map true}}
+                {:id "release"
+                 :source-paths ["src-cljs"]
+                 :compiler
+                   {:output-to "static/main.js"
+                    :optimizations :advanced
+                    :elide-asserts true
+                    :pretty-print false
+                    :output-wrapper false
+                    :preamble ["react/react.min.js"]
+                    :externs ["react/externs/react.js"]
+                    :closure-warnings {:externs-validation :off
+                                       :non-standard-jsdoc :off}}}]}
   )

@@ -1,12 +1,22 @@
 (ns main
   (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [om.core :as om :include-macros true]
-            [om.dom :as dom :include-macros true]
-            [taoensso.sente :as s]
+  (:require [om.core         :as om
+                             :include-macros true]
+            [om.dom          :as dom
+                             :include-macros true]
+            [taoensso.sente  :as s]
             [cljs.core.async :refer [put! chan <! sliding-buffer]]
-            [geo.core :as geo]))
+            [secretary.core  :as secretary
+                             :include-macros true
+                             :refer [defroute]]
+            [goog.events     :as events]
+            [goog.history.EventType :as EventType]
+            [geo.core        :as geo])
+  (:import goog.History))
 
 (enable-console-print!)
+
+(secretary/set-config! :prefix "#")
 
 ;; setup web socket handlers
 (let [{:keys [chsk ch-recv send-fn state]}
@@ -16,58 +26,53 @@
   (def chsk-send! send-fn)
   (def chsk-state state))
 
-(defn event-loop
-  "Handle inbound events."
-  [app owner]
-  (go (loop []
-        (let [[op arg] (<! ch-chsk)]
-          (case op
-            :chsk/recv (handle-event arg app owner)
-            ;; other sente events go here
-            ))
-        (recur))))
+(defmulti event-msg-handler :id)
 
-;; FIXME refactor
-;(defmulti event-msg-handler :id) ; Dispatch on event-id
-;#+cljs
-;(do ; Client-side methods
-;  (defmethod event-msg-handler :default ; Fallback
-;    [{:as ev-msg :keys [event]}]
-;    (logf "Unhandled event: %s" event))
-;
-;  (defmethod event-msg-handler :chsk/state
-;    [{:as ev-msg :keys [?data]}]
-;    (if (= ?data {:first-open? true})
-;      (logf "Channel socket successfully established!")
-;      (logf "Channel socket state change: %s" ?data)))
-;
-;  (defmethod event-msg-handler :chsk/recv
-;    [{:as ev-msg :keys [?data]}]
-;    (logf "Push event from server: %s" ?data))
-;
-;  ;; Add your (defmethod handle-event-msg! <event-id> [ev-msg] <body>)s here...
-;  )
+(defmethod event-msg-handler :default ; Fallback
+  [op arg app owner]
+  ;[{:as ev-msg :keys [event]}]
+  (println op arg)
+  ;(println "Unhandled event: %s" event))
+  )
 
+(defmethod event-msg-handler :chsk/state
+  [op arg app owner]
+  ;[{:as ev-msg :keys [?data]}]
+  (println op arg)
+  ;(if (= ?data {:first-open? true})
+  ;  (println "Channel socket successfully established!")
+  ;  (println "Channel socket state change: %s" ?data)))
+  )
+
+(defmethod event-msg-handler :chsk/recv
+  [op arg app owner]
+  (println op arg)
+  ;[{:as ev-msg :keys [?data]}]
+  ;(println "Push event from server: %s" ?data))
+  )
+
+;; FIXME upon receiving a msg, calculate the distance
 
 (defn- now [] 
   (quot (.getTime (js/Date.)) 1000))
 
 (def app-state (atom {:max-id 0
-                      :location {:latitude 0
+                      :location {:latitude 90
                                  :longitude 0}
                       :post ""
                       :username "Señor Tester"
                       :messages [{:msg  "I can talk!"
                                   :author "Duudilus"
                                   :location {:latitude 90
-                                             :longitude 0}}]}))
+                                             :longitude 0}
+                                  :distance "0km"}]}))
 
 (defn distance
   "TODO I don't know if these numbers are correct.
    What's the 4326 all about?"
-  [msg-loc]
-  (let [my-loc (.-state cur-loc) ;; FIXME ref om state
-        pt1 (geo/point 4326 (:latitude my-loc) (:longitude my-loc))
+  [msg-loc my-loc]
+  (println msg-loc my-loc)
+  (let [pt1 (geo/point 4326 (:latitude my-loc) (:longitude my-loc))
         pt2 (geo/point 4326 (.-latitude msg-loc) (.-longitude msg-loc))
         dist (geo/distance-to pt1 pt2)]
     (str dist "km")))
@@ -101,15 +106,14 @@
   (reify
     om/IRenderState
     (render-state [this _]
+      (println message)
       (dom/div #js {:className "row message"}
         (dom/div #js {:className "row"}
           (dom/div #js {:className "col-md-4"} (:msg message)))
         (dom/div #js {:className "row"}
           (dom/div #js {:className "col-md-2"} (:author message))
-          ;; FIXME display distance, not location.
-          ;; must access global state
           (dom/div #js {:className "col-md-2 col-md-offset-8"}
-                    (display-location (:location message))))))))
+                   (:distance message)))))))
 
 (defn messages-view [app owner]
   (reify
@@ -150,8 +154,14 @@
                           "Submit"))))
         (apply dom/div #js {:className "message-list"}
                (om/build-all message-view  (:messages app)
-                             {:init-state state}))
-                 ))))
+                             {:init-state state }))))))
+
+;; TODO enable registration / login
+(defn landing-view [app owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (dom/h1 nil "Landing page"))))
 
 (comment
 (defn local-view [app owner]
@@ -164,66 +174,20 @@
         (om/build footer-view app {:init-state state})))))
   )
 
-(comment
-(defn external-view [app owner]
-  "stuff"
-  ))
+;; TODO do I need the #'s?
+;; /#/
+(defroute "/" [] (page landing-view))
+;; /#/app
+(defroute "/app" [] (page messages-view))
 
-(om/root
-  messages-view app-state
-  {:target (. js/document (getElementById "messages"))})
+(def app-container (. js/document (getElementById "app-container")))
 
-;
-;(set! (.-onopen conn)
-;  (fn [e]
-;    (.send conn
-;      (.stringify js/JSON (js-obj "command" "getall")))))
-;
-;(set! (.-onerror conn)
-;  (fn []
-;    (js/alert "error")
-;    (.log js/console js/arguments)))
-;
-;(set! (.-onmessage conn)
-;  (fn [e]
-;    (let [msgs (.parse js/JSON (.-data e))]
-;      (doseq [msg msgs]
-;        ;; if message is new and it's for me, then...
-;        ;; FIXME get om state
-;         (if (> (.-id msg) (.-state max-id))
-;           (do
-;             (add-msg msg)
-;             (swap! max-id #(.-id msg))))))))
+(defn render-page [component state target]
+  (om/root component state {:target target}))
 
-;(defn reset-input []
-;  (.val i ""))
+(defn page [component]
+  (render-page component app-state app-container))
 
-;(def i (js/$ "#i"))
-;(def history (js/$ "#history"))
-;
-;(defn add-msg [msg]
-;  (js/console.log msg)
-;  (let [t (str "<span class=\"time\">" (- (now) (.-time msg))  "s ago</span>")
-;        dist (str "<span class=\"distance\">" (distance (.-location msg)) "</span>")
-;        author (str "<span class=\"author\">" (.-author msg) "</span>: ")]
-;    (.append history (str "<li>" author (.-msg msg) dist t "</li>"))))
-;
-;
-
-;(defn send-to-server []
-;  (let [msg (.trim js/$ (.val i))
-;        author (.trim js/$ (.val (js/$ "#name")))
-;        payload (js-obj "msg" msg
-;                        "author" author
-;                        "location" (clj->js (.-state cur-loc)))]
-;    (if msg
-;      (do
-;        (.send conn (.stringify js/JSON payload))
-;        (reset-input)
-;        ))))
-
-;(.click (js/$ "#send") send-to-server)
-
-;(.keyup (.focus i) 
-;  (fn [e]
-;    (if (= (.-which e) 13) (send-to-server))))
+(let [h (History.)]
+    (goog.events/listen h EventType/NAVIGATE #(secretary/dispatch! (.-token %)))
+    (doto h (.setEnabled true)))
