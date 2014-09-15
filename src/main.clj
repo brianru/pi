@@ -1,6 +1,7 @@
 (ns main
   (:gen-class)
-  (:require [clojure.core.async           :refer [<! <!! chan go thread]]
+  (:require [clojure.core.async           :refer [<! <!! chan go go-loop
+                                                  thread]]
             [clojure.core.cache           :as cache]
             [org.httpkit.server           :as kit]
             [taoensso.sente               :as s]
@@ -40,6 +41,9 @@
                          :location {:latitude 90 :longitude 0}}]))
 
 (defmulti event-msg-handler :id)
+(defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
+  (println "Event: %s" event)
+  (event-msg-handler ev-msg))
 
 (defmethod event-msg-handler :default
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
@@ -47,12 +51,18 @@
         uid     (:uid     session)]
     (println "Unhandled event: %s" event)
     (println "uid:" uid)
+    (chsk-send! uid [:chsk/receive "apple"])
     (when-not (:dummy-reply-fn (meta ?reply-fn))
+      ;; TODO looks like a typo, confirm.
       (?reply-fn {:umatched-event-as-echoed-from-from-server event}))))
 
 (defmethod event-msg-handler :chsk/uidport-open [ev-msg] nil)
 (defmethod event-msg-handler :chsk/uidport-close [ev-msg] nil)
 (defmethod event-msg-handler :chsk/ws-ping [ev-msg] nil)
+;(defmethod event-msg-handler :test/echo
+;  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
+;  (?reply-fn event))
+
 
 (defmethod event-msg-handler :submit/post
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
@@ -60,22 +70,33 @@
     (when msg
       (let [data (merge post {:time (now) :id (next-id)})]
         (dosync
-          (let [all-msgs* (conj @all-msgs data)
-                total     (count all-msgs*)]
-            (if (> total 100)
-              (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
-              (ref-set all-msgs all-msgs*))))
+         (ref-set all-msgs (conj @all-msgs data)))
+          ;(let [all-msgs* (conj @all-msgs data)
+          ;      total     (count all-msgs*)]
+          ;  (if (> total 100)
+          ;    (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
+          ;    (ref-set all-msgs all-msgs*))))
         (doseq [uid (:any @connected-uids)]
-          (println "uid:" uid)
-          (chsk-send! uid [:test/echo "hello"])
+          (println event)
+          (println uid)
           (chsk-send! uid [:new/post data]))))))
+
+;(defn ping-all [msg]
+;  (doseq [uid (:any @connected-uids)]
+;    (chsk-send! uid [:test/echo msg])))
 
 (defn login! [ring-request]
   (let [{:keys [session params]} ring-request
         {:keys [user-id]} params]
     {:status 200 :session (assoc session :uid user-id)}))
 
-(defroutes server
+
+;;;; Init
+
+;; HTTP Server (http-kit)
+
+(defroutes http-routes
+  ;; the #' things are for vars
   (GET  "/chsk"    req (#'ring-ajax-get-ws req))
   (POST "/chsk"    req (#'ring-ajax-post req))
   (POST "/login"   req (login! req))
@@ -87,10 +108,8 @@
         (assoc-in ring.middleware.defaults/site-defaults
                   [:security :anti-forgery]
                   {:read-token (fn [req] (-> req :params :csrf-token))})]
-   (ring.middleware.defaults/wrap-defaults server ring-defaults-config)))
-
-
-;;;; Init
+   (ring.middleware.defaults/wrap-defaults http-routes
+                                           ring-defaults-config)))
 
 (defonce http-server_ (atom nil))
 (defn stop-http-server! []
@@ -104,11 +123,13 @@
     (reset! http-server_ s)
     (println "Http-kit server is running on port" port)))
 
+;; Socket message router (go-loop)
+
 (defonce    router_ (atom nil))
 (defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))
 (defn start-router! []
   (stop-router!)
-  (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler)))
+  (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler*)))
 
 (defn start! []
   (start-router!)

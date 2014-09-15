@@ -18,7 +18,7 @@
                  [sablono "0.2.22"]
                  [geo-clj "0.3.15"]
                  ]
-  :min-lein-version "2.0.0"
+  :min-lein-version "2.3.3"
   :main main
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-marginalia "0.7.1"]]

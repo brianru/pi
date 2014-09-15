@@ -1,11 +1,13 @@
 (ns main
-  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require-macros
+            [cljs.core.async.macros :as asyncm :refer [go go-loop]])
   (:require [om.core         :as om
                              :include-macros true]
             [om.dom          :as dom
                              :include-macros true]
             [taoensso.sente  :as s]
-            [cljs.core.async :refer [put! chan <! sliding-buffer]]
+            [cljs.core.async :as async :refer [put! chan <! <!! >! >!!
+                                     sliding-buffer]]
             [secretary.core  :as secretary
                              :include-macros true
                              :refer [defroute]]
@@ -15,40 +17,29 @@
   (:import goog.History))
 
 (enable-console-print!)
-
 (secretary/set-config! :prefix "#")
 
 ;; setup web socket handlers
 (let [{:keys [chsk ch-recv send-fn state]}
       (s/make-channel-socket! "/chsk" {:type :auto})]
   (def chsk       chsk)
-  (def ch-chsk    ch-rev)
+  (def ch-chsk    ch-recv)
   (def chsk-send! send-fn)
   (def chsk-state state))
 
-(defmulti event-msg-handler :id)
+(defmulti event-msg-handler 
+  (fn [{:as ev-msg :keys [?data]}]
+    (first ?data)))
 
-(defmethod event-msg-handler :default ; Fallback
-  [op arg app owner]
-  ;[{:as ev-msg :keys [event]}]
-  (println op arg)
+(defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
+  (println "Event:" event)
+  (event-msg-handler ev-msg))
+
+(defmethod event-msg-handler :default
+  [{:as ev-msg :keys [event ?data]}]
+  (println ":default")
+  (println ?data)
   ;(println "Unhandled event: %s" event))
-  )
-
-(defmethod event-msg-handler :chsk/state
-  [op arg app owner]
-  ;[{:as ev-msg :keys [?data]}]
-  (println op arg)
-  ;(if (= ?data {:first-open? true})
-  ;  (println "Channel socket successfully established!")
-  ;  (println "Channel socket state change: %s" ?data)))
-  )
-
-(defmethod event-msg-handler :chsk/recv
-  [op arg app owner]
-  (println op arg)
-  ;[{:as ev-msg :keys [?data]}]
-  ;(println "Push event from server: %s" ?data))
   )
 
 ;; FIXME upon receiving a msg, calculate the distance
@@ -131,7 +122,8 @@
       (let [locate (om/get-state owner :locate)]
         (go (loop []
               (let [location (<! locate)]
-                (om/transact! app :location #(merge % location)))
+                (om/transact! app :location #(merge % location))
+                (chsk-send! [:test/print location] 1000 #(println %)))
               (recur)))
       (let [locate (om/get-state owner :locate)]
         (locateMe locate) ;; init
@@ -172,7 +164,8 @@
           (do
             (om/transact! app :username (fn [_] username))
             (s/chsk-reconnect! chsk)
-            (secretary/dispatch! "/app?login-success")) ;; todo doesn't work
+            ;; TODO doesn't work very well
+            (secretary/dispatch! "/app?login-success"))
           (println "failed to login:" ajax-resp))))))
 
 (defn landing-view [app owner]
@@ -239,7 +232,7 @@
 (defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))
 (defn start-router! []
   (stop-router!)
-  (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler)))
+  (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler*)))
 
 (defn start! []
   (start-router!))
