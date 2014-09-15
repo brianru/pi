@@ -12,11 +12,10 @@
                  [javax.servlet/servlet-api "2.5"] ;dev only ?
                  [http-kit "2.1.18"]
                  [com.taoensso/sente "1.1.0"]
+                 [compojure "1.1.9"]
                  [om "0.7.3"]
                  [secretary "1.2.1"]
-                 ;[hiccup "1.0.5"]
-                 [compojure "1.1.9"]
-                 [org.clojure/data.json "0.2.5"]
+                 [sablono "0.2.22"]
                  [geo-clj "0.3.15"]
                  ]
   :min-lein-version "2.0.0"
@@ -27,15 +26,15 @@
   :cljsbuild {:builds
                [{:id "dev"
                  :source-paths ["src-cljs"]
-                 :compiler {:output-to "static/main.js"
-                            :output-dir "static/out"
+                 :compiler {:output-to "resources/public/main.js"
+                            :output-dir "resources/public/out"
                             :optimizations :none
                             :pretty-print true
                             :source-map true}}
                 {:id "release"
                  :source-paths ["src-cljs"]
                  :compiler
-                   {:output-to "static/main.js"
+                   {:output-to "resources/public/main.js"
                     :optimizations :advanced
                     :elide-asserts true
                     :pretty-print false

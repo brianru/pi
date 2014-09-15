@@ -1,5 +1,7 @@
 /target
+/resources/public/out
 /static/main.js
+/resources/public/main.js
 /classes
 /checkouts
 /static/out

@@ -7,10 +7,9 @@
             [ring.middleware.defaults]
             [ring.middleware.anti-forgery :as ring-anti-forgery]
             [environ.core                 :refer [env]]
-            [clojure.data.json            :as json]
             [clojure.walk                 :refer [keywordize-keys]]
             (compojure [core              :refer [defroutes GET POST]]
-                       [route             :refer [files not-found]])
+                       [route             :refer [resources not-found]])
             ; TODO setup timbre for logging
             ))
 
@@ -27,8 +26,6 @@
   (def connected-uids   connected-uids))
 
 (defn- now [] (quot (System/currentTimeMillis) 1000))
-
-(def clients (atom {}))
 
 (let [max-id (atom 0)]
   (defn next-id []
@@ -54,12 +51,11 @@
       (?reply-fn {:umatched-event-as-echoed-from-from-server event}))))
 
 (defmethod event-msg-handler :chsk/uidport-open [ev-msg] nil)
-
+(defmethod event-msg-handler :chsk/uidport-close [ev-msg] nil)
 (defmethod event-msg-handler :chsk/ws-ping [ev-msg] nil)
 
 (defmethod event-msg-handler :submit/post
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
-  (println event id ?data ring-req)
   (let [{:keys [msg author location] :as post} (last event)]
     (when msg
       (let [data (merge post {:time (now) :id (next-id)})]
@@ -68,23 +64,22 @@
                 total     (count all-msgs*)]
             (if (> total 100)
               (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
-              (ref-set all-msgs all-msgs*))
-            (println @all-msgs)))
+              (ref-set all-msgs all-msgs*))))
         (doseq [uid (:any @connected-uids)]
           (println "uid:" uid)
+          (chsk-send! uid [:test/echo "hello"])
           (chsk-send! uid [:new/post data]))))))
 
 (defn login! [ring-request]
   (let [{:keys [session params]} ring-request
         {:keys [user-id]} params]
-    (println "Login request: %s" params)
     {:status 200 :session (assoc session :uid user-id)}))
 
 (defroutes server
-  (GET  "/ws"    req (#'ring-ajax-get-ws req))
-  (POST "/ws"    req (#'ring-ajax-post req))
-  (POST "/login" req (login! req))
-  (files ""      {:root "static"}) ;; TODO move to resources/public
+  (GET  "/chsk"    req (#'ring-ajax-get-ws req))
+  (POST "/chsk"    req (#'ring-ajax-post req))
+  (POST "/login"   req (login! req))
+  (resources "/")
   (not-found "<p>Page not found.</p>"))
 
 (def my-ring-handler
@@ -107,9 +102,9 @@
   (let [port (read-string (or (env :port) "9899"))
         s    (kit/run-server (var my-ring-handler) {:port port})]
     (reset! http-server_ s)
-    (println "Http-kit server is running at `%s`" port)))
+    (println "Http-kit server is running on port" port)))
 
-(defonce router_ (atom nil))
+(defonce    router_ (atom nil))
 (defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))
 (defn start-router! []
   (stop-router!)

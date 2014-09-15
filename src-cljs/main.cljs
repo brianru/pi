@@ -20,7 +20,7 @@
 
 ;; setup web socket handlers
 (let [{:keys [chsk ch-recv send-fn state]}
-      (s/make-channel-socket! "/ws" {:type :auto})]
+      (s/make-channel-socket! "/chsk" {:type :auto})]
   (def chsk       chsk)
   (def ch-chsk    ch-rev)
   (def chsk-send! send-fn)
@@ -60,7 +60,7 @@
                       :location {:latitude 90
                                  :longitude 0}
                       :post ""
-                      :username "Señor Tester"
+                      :username ""
                       :messages [{:msg  "I can talk!"
                                   :author "Duudilus"
                                   :location {:latitude 90
@@ -69,7 +69,8 @@
 
 (defn distance
   "TODO I don't know if these numbers are correct.
-   What's the 4326 all about?"
+   What's the 4326 all about?
+   TODO make sure both locs come in as clojure maps (or parse em)"
   [msg-loc my-loc]
   (println msg-loc my-loc)
   (let [pt1 (geo/point 4326 (:latitude my-loc) (:longitude my-loc))
@@ -83,6 +84,9 @@
 (defn parse-location [x]
   {:latitude js/x.coords.latitude
    :longitude js/x.coords.longitude})
+
+
+;; Components
 
 (defn handle-change [e owner {:keys [post]}]
   (om/set-state! owner :post (.. e -target -value)))
@@ -127,7 +131,7 @@
       (let [locate (om/get-state owner :locate)]
         (go (loop []
               (let [location (<! locate)]
-                (om/transact! app :location  #(merge % location)))
+                (om/transact! app :location #(merge % location)))
               (recur)))
       (let [locate (om/get-state owner :locate)]
         (locateMe locate) ;; init
@@ -156,12 +160,45 @@
                (om/build-all message-view  (:messages app)
                              {:init-state state }))))))
 
-;; TODO enable registration / login
+(defn login [app owner]
+  (let [username (-> (om/get-node owner "login-username") .-value)]
+    (s/ajax-call "/login"
+      {:method :post
+       :params {:user-id username
+                :csrf-token (:csrf-token @chsk-state)}}
+      ;; handle response callback
+      (fn [{:keys [?status] :as ajax-resp}]
+        (if (= ?status 200)
+          (do
+            (om/transact! app :username (fn [_] username))
+            (s/chsk-reconnect! chsk)
+            (secretary/dispatch! "/app?login-success")) ;; todo doesn't work
+          (println "failed to login:" ajax-resp))))))
+
 (defn landing-view [app owner]
   (reify
     om/IRenderState
     (render-state [this state]
-      (dom/h1 nil "Landing page"))))
+      (dom/div nil
+        (dom/h1 nil "Landing page"))
+      (dom/form #js {:className "form-horizontal"
+                     :role "form"
+                     :onSubmit #(login app owner)}
+        (dom/div #js {:className "form-group"}
+          (dom/label #js {:htmlFor "inputEmail3"
+                          :className "col-sm-2 control-label"}
+                     "Username")
+          (dom/div #js {:className "col-sm-10"}
+            (dom/input #js {:type "text"
+                            :ref "login-username"
+                            :className "form-control"
+                            :value (:username state)
+                            :placeholder "Username"})))
+        (dom/div #js {:className "form-group"}
+          (dom/div #js {:className "col-sm-offset-2 col-sm-10"}
+            (dom/button #js {:type "submit"
+                             :className "btn btn-primary"}
+                        "Submit")))))))
 
 (comment
 (defn local-view [app owner]
@@ -174,6 +211,8 @@
         (om/build footer-view app {:init-state state})))))
   )
 
+;; Routing
+
 ;; TODO do I need the #'s?
 ;; /#/
 (defroute "/" [] (page landing-view))
@@ -185,9 +224,24 @@
 (defn render-page [component state target]
   (om/root component state {:target target}))
 
+;; Do these have to be separate functions?
+;; Useful if I switch up app-state, but idk if that's necessary.
 (defn page [component]
   (render-page component app-state app-container))
 
 (let [h (History.)]
-    (goog.events/listen h EventType/NAVIGATE #(secretary/dispatch! (.-token %)))
+    (goog.events/listen h EventType/NAVIGATE
+                        #(secretary/dispatch! (.-token %)))
     (doto h (.setEnabled true)))
+
+;; INIT
+(def        router_ (atom nil))
+(defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))
+(defn start-router! []
+  (stop-router!)
+  (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler)))
+
+(defn start! []
+  (start-router!))
+
+(start!)
