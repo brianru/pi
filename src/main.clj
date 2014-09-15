@@ -79,7 +79,7 @@
   (GET  "/chsk"    req (#'ring-ajax-get-ws req))
   (POST "/chsk"    req (#'ring-ajax-post req))
   (POST "/login"   req (login! req))
-  (route/resources "/")
+  (route/files "" {:root "resources/public"})
   (route/not-found "<p>Page not found.</p>"))
 
 (def my-ring-handler
