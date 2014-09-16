@@ -1,4 +1,4 @@
-(ns pi.main
+(ns main
   (:require-macros
             [cljs.core.async.macros :as asyncm :refer [go go-loop]])
   (:require [om.core         :as om

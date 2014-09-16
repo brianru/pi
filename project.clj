@@ -19,7 +19,7 @@
                  [geo-clj "0.3.15"]
                  ]
   :min-lein-version "2.3.3"
-  :main main
+  :main pi.main
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-marginalia "0.7.1"]]
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
@@ -35,12 +35,13 @@
                  :source-paths ["src-cljs"]
                  :compiler
                    {:output-to "resources/public/js/main.js"
+                    ;:output-dir "resources/public/js/out"
                     :optimizations :advanced
                     :elide-asserts true
                     :pretty-print false
                     :output-wrapper false
-                    :preamble ["react/react.min.js"]
-                    :externs ["react/externs/react.js"]
+                    ;:preamble ["react/react.min.js"]
+                    ;:externs ["react/externs/react.js"]
                     :closure-warnings {:externs-validation :off
                                        :non-standard-jsdoc :off}}}]}
   )

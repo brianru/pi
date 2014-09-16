@@ -1,1 +1,1 @@
-web: lein cljsbuild once && ./run
+web: lein cljsbuild once && lein with-profile dev run
