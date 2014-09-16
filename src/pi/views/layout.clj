@@ -1,7 +1,7 @@
 (ns pi.views.layout
   (:require [hiccup.page :refer [html5 include-css include-js]]))
 
-(defn head []
+(defn- head []
   [:head
    [:meta {:charset "utf-8"
            :http-equiv "X-UA-Compatible"

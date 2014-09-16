@@ -1,7 +1,6 @@
 (ns pi.main
   (:gen-class)
-  (:require ;[pi.landing                   :refer [landing-page]]
-            [clojure.core.async           :refer [<! <!! chan go go-loop
+  (:require [clojure.core.async           :refer [<! <!! chan go go-loop
                                                   thread]]
             [clojure.core.cache           :as cache]
             [org.httpkit.server           :as kit]
@@ -12,6 +11,8 @@
             [clojure.walk                 :refer [keywordize-keys]]
             (compojure [core              :refer [defroutes GET POST]]
                        [route             :as route])
+            [pi.views.layout              :as layout]
+            [hiccup.core                  :refer :all]
             ; TODO setup timbre for logging
             ))
 
@@ -65,12 +66,14 @@
   (println loc msg)
   true)
 
+;; TODO not sure if this is working right
 (defmethod event-msg-handler :init/messages
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
   (if-let [uid (-> ring-req :session :uid)]
     (let [{:keys [username location]} (last event)
           msgs (filter #(in-radius? username location %) @all-msgs)]
-      (map #(chsk-send! uid %) msgs))))
+      (map #(chsk-send! uid %) msgs))
+    (println "what, why?")))
 
 (defmethod event-msg-handler :submit/post
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
@@ -92,14 +95,17 @@
         {:keys [user-id]} params]
     {:status 200 :session (assoc session :uid user-id)}))
 
+(defn landing-page [req]
+  (layout/common
+    [:p "Hello world!"]))
 
 ;;;; Init
 
 ;; HTTP Server (http-kit)
 
 (defroutes http-routes
-  ;; TODO make a separate homepage
-  ;(GET  "/ext"     req (landing-page req))
+  (GET  "/"        req (layout/app))
+  (GET  "/ext"     req (landing-page req))
   (GET  "/chsk"    req (#'ring-ajax-get-ws req))
   (POST "/chsk"    req (#'ring-ajax-post req))
   (POST "/login"   req (login! req))
