@@ -31,7 +31,7 @@
                             :optimizations :none
                             :pretty-print true
                             :source-map true}}
-                {:id "release"
+                {:id "production"
                  :source-paths ["src-cljs"]
                  :compiler
                    {:output-to "resources/public/js/main.js"

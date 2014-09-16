@@ -1,4 +1,4 @@
-(ns main
+(ns pi.main
   (:gen-class)
   (:require ;[pi.landing                   :refer [landing-page]]
             [clojure.core.async           :refer [<! <!! chan go go-loop

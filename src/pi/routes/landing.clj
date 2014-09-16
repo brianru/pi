@@ -1,4 +1,4 @@
-(ns pi.landing
+(ns pi.routes.landing
   (:require [pi.views.layout :as layout]
             [hiccup.core]))
 

@@ -5,7 +5,7 @@ mkdir classes
 CP="classes:$(lein classpath):examples/websocket/"
 
 java -cp "$CP" \
-    clojure.main -m main
+    clojure.main -m pi.main
 
 
 
