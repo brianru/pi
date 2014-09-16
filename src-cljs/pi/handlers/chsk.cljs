@@ -34,7 +34,7 @@
     ;(println post)
     (if (> (:id post) (:max-id @app-state))
       (swap! app-state assoc :messages
-             (conj (:messages @app-state) post)))))
+             (cons post (:messages @app-state))))))
 
 ;; INIT
 (def        router_ (atom nil))

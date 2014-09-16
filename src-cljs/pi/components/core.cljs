@@ -26,8 +26,8 @@
         (if (= ?status 200)
           (do
             (om/transact! app :username (fn [_] username))
-            (s/chsk-reconnect! chsk)
             (secretary/dispatch! "/app")
+            (s/chsk-reconnect! chsk)
             ;; TODO doesn't work very well
             )
           (println "failed to login:" ajax-resp))))))
@@ -52,47 +52,76 @@
       (chsk-send! [:submit/post post])
       (om/set-state! owner :post ""))))
 
+;; NOTE I don't like this navbar.
+(defn navbar [app owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (dom/nav #js {:className "navbar navbar-default navbar-fixed-top"}
+        (dom/div #js {:className "container"}
+          (dom/div #js {:className "navbar-header"}
+            (dom/button #js {:type "button"
+                             :className "navbar-toggle collapsed"
+                             :data-toggle "collapse"
+                             :data-target "#bs-example-navbar-collapse-1"}
+              (dom/span #js {:className "sr-only"} "Toggle navigation")
+              (dom/span #js {:className "icon-bar"} nil)
+              (dom/span #js {:className "icon-bar"} nil)
+              (dom/span #js {:className "icon-bar"} nil))
+            (dom/a #js {:className "navbar-brand"
+                        :href "#"}
+                   "Pi"))
 
+          (dom/div #js {:className "collapse navbar-collapse"
+                        :id "bs-example-navbar-collapse-1"}
+            (dom/ul #js {:className "nav navbar-nav"}
+              (dom/li #js {:className "active"}
+                (dom/a #js {:href "#/app"} "Local"))
+              (dom/li nil
+                (dom/a #js {:href "#/app/local"} "Teleport"))))
+
+                 )))))
 
 (defn landing-view [app owner]
   (reify
     om/IRenderState
     (render-state [this state]
-      (dom/div nil
-        (dom/h1 nil "Landing page"))
-      (dom/div #js {:className "form-horizontal"
-                     :role "form"}
-        (dom/div #js {:className "form-group"}
-          (dom/label #js {:htmlFor "inputEmail3"
-                          :className "col-sm-2 control-label"}
-                     "Username")
-          (dom/div #js {:className "col-sm-10"}
-            (dom/input #js {:type "text"
-                            :ref "login-username"
-                            :className "form-control"
-                            :value (:username state)
-                            :onKeyDown #(when (= (.-key %) "Enter")
-                                          (login app owner))
-                            :placeholder "Username"})))
-        (dom/div #js {:className "form-group"}
-          (dom/div #js {:className "col-sm-offset-2 col-sm-10"}
-            (dom/button #js {:type "button"
-                             :className "btn btn-primary"
-                             :onTouch #(login app owner)
-                             :onClick #(login app owner)}
-                        "Submit")))))))
+      (dom/div #js {:className "jumbotron form-horizontal"}
+        (om/build navbar app state)
+        (dom/div #js {:className "container login"}
+          (dom/div #js {:className "form-group"}
+            (dom/label #js {:htmlFor "inputEmail3"
+                            :className "col-sm-2 control-label"}
+                       "Username")
+            (dom/div #js {:className "col-sm-10"}
+              (dom/input #js {:type "text"
+                              :ref "login-username"
+                              :className "form-control"
+                              :value (:username state)
+                              :onKeyDown #(when (= (.-key %) "Enter")
+                                            (login app owner))
+                              :placeholder "Username"})))
+          (dom/div #js {:className "form-group"}
+            (dom/div #js {:className "col-sm-offset-2 col-sm-10"}
+              (dom/button #js {:type "button"
+                               :className "btn btn-primary"
+                               :onTouch #(login app owner)
+                               :onClick #(login app owner)}
+                          "Submit"))))))))
 
 (defn message-view [message owner]
   (reify
     om/IRenderState
     (render-state [this _]
       (dom/div #js {:className "row message"}
-        (dom/div #js {:className "row"}
-          (dom/div #js {:className "col-md-4"} (:msg message)))
-        (dom/div #js {:className "row"}
-          (dom/div #js {:className "col-md-2"} (:author message))
-          (dom/div #js {:className "col-md-2 col-md-offset-8"}
-                   (:distance message)))))))
+        (dom/div #js {:className "row top-row"}
+          (dom/div #js {:className "col-md-8"} (:msg message))
+          (dom/div #js {:className "col-md-4"} (:time message)))
+        (dom/div #js {:className "row bottom-row"}
+          (dom/div #js {:className "col-xs-6 col-md-2"}
+                   (:author message))
+          (dom/div #js {:className "col-xs-6 col-md-2 col-md-offset-8"}
+                   (util/format-km (:distance message))))))))
 
 (defn messages-view [app owner]
   (reify
@@ -122,8 +151,9 @@
     om/IRenderState
     (render-state [this state]
       (dom/div #js {:className "container"}
-        (dom/h2 nil (util/display-location (:location app)))
-        (dom/div nil
+        (om/build navbar app {})
+        (dom/h4 nil (util/display-location (:location app)))
+        (dom/div #js {:className "new-post"}
           (dom/textarea #js {:ref "new-post"
                              :className "form-control"
                              :placeholder "What's happening?"
@@ -131,8 +161,8 @@
                              :value (:post state)
                              :onChange #(handle-change % owner state)})
           (dom/div #js {:className "row"}
-            (dom/div #js {:className "col-md-2"} (:username app))
-            (dom/div #js {:className "col-md-2 col-md-offset-8"}
+            (dom/div #js {:className "pull-left"} (:username app))
+            (dom/div #js {:className "pull-right"}
               (dom/button #js {:type "button"
                                :className "btn btn-primary"
                                :onTouch #(submit-post app owner)

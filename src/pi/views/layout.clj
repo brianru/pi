@@ -12,7 +12,8 @@
            :type "image/png"
            :href="/favicon.png"}]
    (include-css "/css/main.css"
-                "//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css")])
+                "//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css")
+   ])
 
 (defn common [& body]
   (html5

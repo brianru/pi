@@ -5,24 +5,40 @@
     box-sizing: border-box; 
 }
 body {
-    background: #FFFFFF;
+    background-color: #FFFFFF;
+    padding-top: 70px;
+}
+.jumbotron {
+    background-color: inherit !important;
+}
+.login {
+    height: 100vh;
+    margin: auto auto;
+}
+.new-post {
+    margin-bottom: 24px;
+}
+.new-post > textarea {
+    margin-bottom: 12px;
 }
 .message-list > .message.row {
-    border: 1px solid #666666;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
+    border-top: 1px solid #666666;
+    border-bottom: 1px solid #666666;
 }
 
 .message {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
+
 .btn {
     width: 132px;
 }
-.message > .row:first-child {
+.message > .top-row {
     font-size: 14px;
 }
-.message > .row:last-child {
+.message > .bottom-row {
     font-size: 12px;
+}
+.message > .row > div:last-child {
+    text-align: right;
 }

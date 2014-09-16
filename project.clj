@@ -7,15 +7,20 @@
                  [org.clojure/clojurescript "0.0-2322"]
                  [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
                  [environ "1.0.0"]
+
+                 ;; Web communications
                  [ring/ring-core "1.3.1"]
                  [ring/ring-defaults "0.1.1"]
                  [javax.servlet/servlet-api "2.5"] ;dev only ?
                  [http-kit "2.1.18"]
                  [com.taoensso/sente "1.1.0"]
-                 [org.clojure/java.jdbc "0.3.5"]
-                 [postgresql/postgresql "8.4-702.jdbc4"]
                  [compojure "1.1.9"]
 
+                 ;; Database
+                 [org.clojure/java.jdbc "0.3.5"]
+                 [postgresql/postgresql "8.4-702.jdbc4"]
+
+                 ;; Client application
                  [om "0.7.3"]
                  [secretary "1.2.1"]
                  [sablono "0.2.22"]
