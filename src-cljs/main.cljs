@@ -31,6 +31,7 @@
   (fn [{:as ev-msg :keys [?data]}]
     (first ?data)))
 
+;; wrapper for logging and such
 (defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
   (println "Event:" event)
   (event-msg-handler ev-msg))
@@ -42,7 +43,12 @@
   ;(println "Unhandled event: %s" event))
   )
 
-;; FIXME upon receiving a msg, calculate the distance
+(defmethod event-msg-handler :new/post
+  [{:as ev-msg :keys [event ?data]}]
+  (let [post (last ?data)]
+    (if (> (:id post) (:max-id @app-state))
+      (swap! app-state assoc :messages
+             (conj (:messages @app-state) post)))))
 
 (defn- now [] 
   (quot (.getTime (js/Date.)) 1000))
@@ -88,7 +94,6 @@
         loc (:location @app)
         post {:msg msg :author author :location loc}]
     (when post
-      (om/transact! app :messages #(conj % post))
       (chsk-send! [:submit/post post])
       (om/set-state! owner :post ""))))
 

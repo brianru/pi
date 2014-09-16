@@ -50,10 +50,7 @@
   (let [session (:session ring-req)
         uid     (:uid     session)]
     (println "Unhandled event: %s" event)
-    (println "uid:" uid)
-    (chsk-send! uid [:chsk/receive "apple"])
     (when-not (:dummy-reply-fn (meta ?reply-fn))
-      ;; TODO looks like a typo, confirm.
       (?reply-fn {:umatched-event-as-echoed-from-from-server event}))))
 
 (defmethod event-msg-handler :chsk/uidport-open [ev-msg] nil)
@@ -77,8 +74,6 @@
           ;    (ref-set all-msgs (vec (drop (- total 100) all-msgs*)))
           ;    (ref-set all-msgs all-msgs*))))
         (doseq [uid (:any @connected-uids)]
-          (println event)
-          (println uid)
           (chsk-send! uid [:new/post data]))))))
 
 ;(defn ping-all [msg]
@@ -106,8 +101,8 @@
 (def my-ring-handler
   (let [ring-defaults-config
         (assoc-in ring.middleware.defaults/site-defaults
-                  [:security :anti-forgery]
-                  {:read-token (fn [req] (-> req :params :csrf-token))})]
+          [:security :anti-forgery]
+          {:read-token (fn [req] (-> req :params :csrf-token))})]
    (ring.middleware.defaults/wrap-defaults http-routes
                                            ring-defaults-config)))
 
