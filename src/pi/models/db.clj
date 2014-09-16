@@ -8,3 +8,9 @@
 (sql/with-db-connection [con db]
   (println (sql/query con
                       "select nspname from pg_catalog.pg_namespace;")))
+
+;(defn init []
+;  (sql/db-do-commands db
+;                      (sql/create-table-ddl :users)
+;                      )
+;  )

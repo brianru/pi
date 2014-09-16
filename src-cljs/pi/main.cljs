@@ -1,4 +1,4 @@
-(ns main
+(ns pi.main
   (:require-macros
             [cljs.core.async.macros :as asyncm :refer [go go-loop]])
   (:require [om.core         :as om
@@ -17,7 +17,7 @@
   (:import goog.History))
 
 (enable-console-print!)
-(secretary/set-config! :prefix "#")
+;(secretary/set-config! :prefix "#")
 
 (defn distance
   "TODO I don't know if these numbers are correct.

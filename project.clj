@@ -28,14 +28,14 @@
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
   :cljsbuild {:builds
                [{:id "dev"
-                 :source-paths ["src-cljs"]
+                 :source-paths ["src-cljs/pi/"]
                  :compiler {:output-to "resources/public/js/main.js"
                             :output-dir "resources/public/js/out"
                             :optimizations :none
                             :pretty-print true
                             :source-map true}}
                 {:id "production"
-                 :source-paths ["src-cljs"]
+                 :source-paths ["src-cljs/pi/"]
                  :compiler
                    {:output-to "resources/public/js/main.js"
                     ;:output-dir "resources/public/js/out"

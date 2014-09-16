@@ -27,7 +27,7 @@
       (include-js "http://fb.me/react-0.11.1.js"
                   "js/out/goog/base.js"
                   "js/main.js")
-      [:script {:type "text/javascript"} "goog.require(\"main\");"]]]))
+      [:script {:type "text/javascript"} "goog.require(\"pi.main\");"]]]))
       
 
            
