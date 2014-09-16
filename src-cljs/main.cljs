@@ -6,7 +6,7 @@
             [om.dom          :as dom
                              :include-macros true]
             [taoensso.sente  :as s]
-            [cljs.core.async :as async :refer [put! chan <! <!! >! >!!
+            [cljs.core.async :as async :refer [put! chan <! >!
                                      sliding-buffer]]
             [secretary.core  :as secretary
                              :include-macros true
@@ -18,6 +18,25 @@
 
 (enable-console-print!)
 (secretary/set-config! :prefix "#")
+
+(defn distance
+  "TODO I don't know if these numbers are correct.
+   What's the 4326 all about?
+   TODO make sure both locs come in as clojure maps (or parse em)"
+  [msg-loc my-loc]
+ ;; TODO make sure coordinates are valid using geo helper fn
+  ;{:pre [(and msg-log my-loc)]}
+  (let [pt1 (geo/point 4326 (:latitude my-loc) (:longitude my-loc))
+        pt2 (geo/point 4326 (:latitude msg-loc) (:longitude msg-loc))
+        dist (geo/distance-to pt1 pt2)]
+    (str dist "km")))
+
+(defn display-location [{:keys [latitude longitude]}]
+  (str "lat: " latitude ", long: " longitude))
+
+(defn parse-location [x]
+  {:latitude js/x.coords.latitude
+   :longitude js/x.coords.longitude})
 
 ;; setup web socket handlers
 (let [{:keys [chsk ch-recv send-fn state]}
@@ -32,20 +51,21 @@
     (first ?data)))
 
 ;; wrapper for logging and such
-(defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
+(defn event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
   (println "Event:" event)
   (event-msg-handler ev-msg))
 
 (defmethod event-msg-handler :default
   [{:as ev-msg :keys [event ?data]}]
-  (println ":default")
-  (println ?data)
-  ;(println "Unhandled event: %s" event))
-  )
+  (println ":default" ?data))
 
+;; TODO refactor to take list of posts
 (defmethod event-msg-handler :new/post
   [{:as ev-msg :keys [event ?data]}]
-  (let [post (last ?data)]
+  (let [d (last ?data)
+        post (assoc d :distance (distance (:location d)
+                                             (:location @app-state)))]
+    (println post)
     (if (> (:id post) (:max-id @app-state))
       (swap! app-state assoc :messages
              (conj (:messages @app-state) post)))))
@@ -54,6 +74,7 @@
   (quot (.getTime (js/Date.)) 1000))
 
 (def app-state (atom {:max-id 0
+                      :initialized false
                       :location {:latitude 90
                                  :longitude 0}
                       :post ""
@@ -63,24 +84,6 @@
                                   :location {:latitude 90
                                              :longitude 0}
                                   :distance "0km"}]}))
-
-(defn distance
-  "TODO I don't know if these numbers are correct.
-   What's the 4326 all about?
-   TODO make sure both locs come in as clojure maps (or parse em)"
-  [msg-loc my-loc]
-  (println msg-loc my-loc)
-  (let [pt1 (geo/point 4326 (:latitude my-loc) (:longitude my-loc))
-        pt2 (geo/point 4326 (.-latitude msg-loc) (.-longitude msg-loc))
-        dist (geo/distance-to pt1 pt2)]
-    (str dist "km")))
-
-(defn display-location [{:keys [latitude longitude]}]
-  (str "lat: " latitude ", long: " longitude))
-
-(defn parse-location [x]
-  {:latitude js/x.coords.latitude
-   :longitude js/x.coords.longitude})
 
 
 ;; Components
@@ -94,6 +97,9 @@
         loc (:location @app)
         post {:msg msg :author author :location loc}]
     (when post
+      ;; not adding to state b/c must first get ID from server
+      ;; might be worth doing something different to make it feel
+      ;; more responsive
       (chsk-send! [:submit/post post])
       (om/set-state! owner :post ""))))
 
@@ -128,12 +134,16 @@
         (go (loop []
               (let [location (<! locate)]
                 (om/transact! app :location #(merge % location))
-                (chsk-send! [:test/print location] 1000 #(println %)))
-              (recur)))
+                (when-not (om/get-state owner :initialized)
+                  (chsk-send! [:init/messages
+                               {:username (:username @app)
+                                :location (:location @app)}])
+                  (om/transact! app :initialized (fn [_] true)))
+              (recur)))))
       (let [locate (om/get-state owner :locate)]
         (locateMe locate) ;; init
         ;; refresh every minute
-        (js/setInterval #(locateMe locate) 60000))))
+        (js/setInterval #(locateMe locate) 60000)))
 
     om/IRenderState
     (render-state [this state]
@@ -142,7 +152,7 @@
         (dom/div nil
           (dom/textarea #js {:ref "new-post"
                              :className "form-control"
-                             :placeholder "What's happening in the neighborhood?"
+                             :placeholder "What's happening?"
                              :rows "3"
                              :value (:post state)
                              :onChange #(handle-change % owner state)})
@@ -155,7 +165,7 @@
                           "Submit"))))
         (apply dom/div #js {:className "message-list"}
                (om/build-all message-view  (:messages app)
-                             {:init-state state }))))))
+                             {:init-state state}))))))
 
 (defn login [app owner]
   (let [username (-> (om/get-node owner "login-username") .-value)]
@@ -168,9 +178,10 @@
         (if (= ?status 200)
           (do
             (om/transact! app :username (fn [_] username))
+            (secretary/dispatch! "/app")
             (s/chsk-reconnect! chsk)
             ;; TODO doesn't work very well
-            (secretary/dispatch! "/app?login-success"))
+            )
           (println "failed to login:" ajax-resp))))))
 
 (defn landing-view [app owner]
@@ -179,9 +190,8 @@
     (render-state [this state]
       (dom/div nil
         (dom/h1 nil "Landing page"))
-      (dom/form #js {:className "form-horizontal"
-                     :role "form"
-                     :onSubmit #(login app owner)}
+      (dom/div #js {:className "form-horizontal"
+                     :role "form"}
         (dom/div #js {:className "form-group"}
           (dom/label #js {:htmlFor "inputEmail3"
                           :className "col-sm-2 control-label"}
@@ -191,11 +201,14 @@
                             :ref "login-username"
                             :className "form-control"
                             :value (:username state)
+                            :onKeyDown #(when (= (.-key %) "Enter")
+                                          (login app owner))
                             :placeholder "Username"})))
         (dom/div #js {:className "form-group"}
           (dom/div #js {:className "col-sm-offset-2 col-sm-10"}
-            (dom/button #js {:type "submit"
-                             :className "btn btn-primary"}
+            (dom/button #js {:type "button"
+                             :className "btn btn-primary"
+                             :onClick #(login app owner)}
                         "Submit")))))))
 
 (comment

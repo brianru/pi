@@ -1,6 +1,7 @@
 (ns main
   (:gen-class)
-  (:require [clojure.core.async           :refer [<! <!! chan go go-loop
+  (:require ;[pi.landing                   :refer [landing-page]]
+            [clojure.core.async           :refer [<! <!! chan go go-loop
                                                   thread]]
             [clojure.core.cache           :as cache]
             [org.httpkit.server           :as kit]
@@ -42,14 +43,14 @@
 
 (defmulti event-msg-handler :id)
 (defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
-  (println "Event: %s" event)
+  (println "Event:" event)
   (event-msg-handler ev-msg))
 
 (defmethod event-msg-handler :default
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
   (let [session (:session ring-req)
         uid     (:uid     session)]
-    (println "Unhandled event: %s" event)
+    (println "Unhandled event:" event)
     (when-not (:dummy-reply-fn (meta ?reply-fn))
       (?reply-fn {:umatched-event-as-echoed-from-from-server event}))))
 
@@ -60,6 +61,16 @@
 ;  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
 ;  (?reply-fn event))
 
+(defn in-radius? [user loc msg]
+  (println loc msg)
+  true)
+
+(defmethod event-msg-handler :init/messages
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
+  (if-let [uid (-> ring-req :session :uid)]
+    (let [{:keys [username location]} (last event)
+          msgs (filter #(in-radius? username location %) @all-msgs)]
+      (map #(chsk-send! uid %) msgs))))
 
 (defmethod event-msg-handler :submit/post
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
@@ -76,10 +87,6 @@
         (doseq [uid (:any @connected-uids)]
           (chsk-send! uid [:new/post data]))))))
 
-;(defn ping-all [msg]
-;  (doseq [uid (:any @connected-uids)]
-;    (chsk-send! uid [:test/echo msg])))
-
 (defn login! [ring-request]
   (let [{:keys [session params]} ring-request
         {:keys [user-id]} params]
@@ -91,7 +98,8 @@
 ;; HTTP Server (http-kit)
 
 (defroutes http-routes
-  ;; the #' things are for vars
+  ;; TODO make a separate homepage
+  ;(GET  "/ext"     req (landing-page req))
   (GET  "/chsk"    req (#'ring-ajax-get-ws req))
   (POST "/chsk"    req (#'ring-ajax-post req))
   (POST "/login"   req (login! req))
