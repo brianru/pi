@@ -57,7 +57,7 @@
 
 (defmethod event-msg-handler :default
   [{:as ev-msg :keys [event ?data]}]
-  (println ":default" ?data))
+  nil)
 
 ;; TODO refactor to take list of posts
 (defmethod event-msg-handler :new/post
@@ -65,7 +65,7 @@
   (let [d (last ?data)
         post (assoc d :distance (distance (:location d)
                                              (:location @app-state)))]
-    (println post)
+    ;(println post)
     (if (> (:id post) (:max-id @app-state))
       (swap! app-state assoc :messages
              (conj (:messages @app-state) post)))))
@@ -112,7 +112,6 @@
   (reify
     om/IRenderState
     (render-state [this _]
-      (println message)
       (dom/div #js {:className "row message"}
         (dom/div #js {:className "row"}
           (dom/div #js {:className "col-md-4"} (:msg message)))
@@ -134,7 +133,8 @@
         (go (loop []
               (let [location (<! locate)]
                 (om/transact! app :location #(merge % location))
-                (when-not (om/get-state owner :initialized)
+                (when (and (not (:initialized @app))
+                           (:username @app))
                   (chsk-send! [:init/messages
                                {:username (:username @app)
                                 :location (:location @app)}])
@@ -178,8 +178,8 @@
         (if (= ?status 200)
           (do
             (om/transact! app :username (fn [_] username))
-            (secretary/dispatch! "/app")
             (s/chsk-reconnect! chsk)
+            (secretary/dispatch! "/app")
             ;; TODO doesn't work very well
             )
           (println "failed to login:" ajax-resp))))))
