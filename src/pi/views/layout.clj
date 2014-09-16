@@ -1,4 +1,5 @@
-(ns pi.views.layout)
+(ns pi.views.layout
+  (:require [hiccup.page :refer [html5 include-css include-js]]))
 
 (defn head []
   [:head
@@ -13,8 +14,7 @@
    (include-css "/css/main.css"
                 "//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css")])
 
-(defn common
-  [& body]
+(defn common [& body]
   (html5
     (head)
     [:body body]))
