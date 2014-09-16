@@ -161,6 +161,7 @@
             (dom/div #js {:className "col-md-2 col-md-offset-8"}
               (dom/button #js {:type "button"
                                :className "btn btn-primary"
+                               :onTouch #(submit-post app owner)
                                :onClick #(submit-post app owner)}
                           "Submit"))))
         (apply dom/div #js {:className "message-list"}
@@ -208,6 +209,7 @@
           (dom/div #js {:className "col-sm-offset-2 col-sm-10"}
             (dom/button #js {:type "button"
                              :className "btn btn-primary"
+                             :onTouch #(login app owner)
                              :onClick #(login app owner)}
                         "Submit")))))))
 

@@ -12,7 +12,10 @@
                  [javax.servlet/servlet-api "2.5"] ;dev only ?
                  [http-kit "2.1.18"]
                  [com.taoensso/sente "1.1.0"]
+                 [org.clojure/java.jdbc "0.3.5"]
+                 [postgresql/postgresql "8.4-702.jdbc4"]
                  [compojure "1.1.9"]
+
                  [om "0.7.3"]
                  [secretary "1.2.1"]
                  [sablono "0.2.22"]

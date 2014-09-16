@@ -3,6 +3,7 @@
 /resources/public/js/main.js
 /classes
 /checkouts
+/pg
 pom.xml
 pom.xml.asc
 *.jar
