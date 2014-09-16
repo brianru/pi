@@ -27,6 +27,9 @@ $ lein run
 
 ### Documentation
 
+https://rawgit.com/brianru/pi/master/docs/uberdoc.html
+TODO logically sort namespaces
+
 To generate docs, run:
 ```bash
 lein marg src src-cljs
