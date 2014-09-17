@@ -2,6 +2,7 @@
   (:require [geo.core        :as geo]
             [taoensso.encore :refer [exp-backoff]]
             [goog.string :as gstring]
+            [cljs-time.core :as t]
             ))
 
 (defn distance
@@ -22,10 +23,13 @@
     :else (str (gstring/padNumber x 1, 2) "km")))
 
 (defn format-timestamp [t]
+  (println t)
   t)
 
 (defn display-location [{:keys [latitude longitude]}]
-  (str "lat: " latitude ", long: " longitude))
+  (if (and latitude longitude)
+    (str "lat: " latitude ", long: " longitude)
+    ""))
 
 (defn parse-location [x]
   {:latitude js/x.coords.latitude
@@ -45,3 +49,6 @@
      (let [f* (fn [] (do (println m n)
                        (f) (exp-repeater f m (inc n) opts)))]
        (js/setTimeout f* (* (exp-backoff n opts) 100))))))
+
+(defn from-now [t]
+  (. (. js/moment unix t) fromNow))

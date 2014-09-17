@@ -35,7 +35,6 @@
 
 (defmulti event-msg-handler :id)
 (defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
-  (println "Event:" event)
   (event-msg-handler ev-msg))
 
 (defmethod event-msg-handler :default

@@ -51,7 +51,7 @@
                              :value post
                              :onChange #(handle-change % owner)})
           (dom/div #js {:className "row"}
-            (dom/div #js {:className "pull-left"} username)
+            (dom/div #js {:className "pull-left"} (count post))
             (dom/div #js {:className "pull-right"}
               (dom/button #js {:type "button"
                                :disabled (or (not has-access)

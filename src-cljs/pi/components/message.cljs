@@ -15,7 +15,7 @@
           (dom/div #js {:className "col-xs-8 col-md-8"}
                    (get message :msg))
           (dom/div #js {:className "col-xs-4 col-md-4"}
-                   (util/format-timestamp (get message :time))))
+                   (util/from-now (get message :time))))
         (dom/div #js {:className "row bottom-row"}
           (dom/div #js {:className "col-xs-6 col-md-2"}
                    (get message :author))

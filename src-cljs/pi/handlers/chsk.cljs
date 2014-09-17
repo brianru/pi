@@ -18,11 +18,11 @@
 
 ;; wrapper for logging and such
 (defn event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
-  (println "Event:" event)
   (event-msg-handler ev-msg))
 
 (defmethod event-msg-handler :default
   [{:as ev-msg :keys [event ?data]}]
+  (println "Unhandled event:" event)
   nil)
 
 (defmethod event-msg-handler :new/post
@@ -36,7 +36,12 @@
 
 (defmethod event-msg-handler :swap/posts
   [{:as ev-msg :keys [event ?data]}]
-  (swap! app-state assoc :messages (last ?data)))
+  (let [cur-loc (:location @app-state)
+        raw (last ?data)
+        msgs (map #(assoc % :distance
+                          (util/distance cur-loc (:location %)))
+                  raw)]
+    (swap! app-state assoc :messages msgs)))
 
 ;; INIT
 (def        router_ (atom nil))

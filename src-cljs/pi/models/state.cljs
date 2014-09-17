@@ -38,8 +38,8 @@
             :restricted true}]
      :max-id 0
      :initialized false
-     :location {:latitude 90
-                :longitude 0}
+     :location {:latitude nil
+                :longitude nil}
      :post ""
      :username ""
      :messages (list) 

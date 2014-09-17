@@ -2,6 +2,7 @@
   (:require-macros
             [cljs.core.async.macros :as asyncm :refer [go go-loop]])
   (:require [taoensso.sente :as s]
+            [clojure.string :refer [blank?]]
             [om.core         :as om
                              :include-macros true]
             [om.dom          :as dom
@@ -47,34 +48,6 @@
         (println "failed to logout:" ajax-resp))))))
 
 
-(defn gateway-view [app owner]
-  (reify
-    om/IRenderState
-    (render-state [this state]
-      (dom/div #js {:className "jumbotron form-horizontal"}
-        (om/build navbar app state)
-        (dom/div #js {:className "container login"}
-          (dom/div #js {:className "form-group"}
-            (dom/label #js {:htmlFor "inputEmail3"
-                            :className "col-xs-2 control-label"}
-                       "Username")
-            (dom/div #js {:className "col-xs-10"}
-              (dom/input #js {:type "text"
-                              :ref "login-username"
-                              :className "form-control"
-                              :value (:username state)
-                              :onKeyDown #(when (= (.-key %) "Enter")
-                                            (login app owner))
-                              :placeholder "Username"})))
-          (dom/div #js {:className "form-group"}
-            (dom/div #js {:className "col-xs-offset-2 col-xs-10"}
-              (dom/button #js {:type "button"
-                               :className "btn btn-primary"
-                               :onTouch #(login app owner)
-                               :onClick #(login app owner)}
-                          "Submit"))))
-                           ))))
-
 (defn logout-view [app owner]
   (reify
     om/IRenderState
@@ -82,6 +55,42 @@
       (dom/div #js {:className "logout"}
                (dom/button #js {:type "button"
                                 :className "red btn btn-primary"
+                                :onKeyDown #(when (= (.-key %) "Enter")
+                                              (logout app owner))
                                 :onTouch #(logout app owner)
                                 :onClick #(logout app owner)}
                            "Logout")))))
+
+(defn login-view [app owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (dom/div nil
+        (dom/div #js {:className "form-group"}
+          (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
+            (dom/input #js {:type "text"
+                            :ref "login-username"
+                            :className "form-control"
+                            :autoFocus true
+                            :value (:username state)
+                            :onKeyDown #(when (= (.-key %) "Enter")
+                                          (login app owner))
+                            :placeholder "Username"})))
+        (dom/div #js {:className "form-group"}
+          (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
+            (dom/button #js {:type "button"
+                             :className "btn btn-primary"
+                             :onTouch #(login app owner)
+                             :onClick #(login app owner)}
+                        "Submit")))))))
+
+(defn gateway-view [app owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (dom/div #js {:className "jumbotron form-horizontal"}
+        (om/build navbar app state)
+        (dom/div #js {:className "container login"}
+          (if-not (blank? (get app :username))
+            (om/build logout-view app)
+            (om/build login-view app)))))))

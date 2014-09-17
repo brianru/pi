@@ -23,32 +23,31 @@
 (defn render-page [component state target]
   (om/root component state {:target target}))
 
-;; Do these have to be separate functions?
-;; Useful if I switch up app-state, but idk if that's necessary.
-(defn page [component]
-  (render-page component app-state app-container))
-
-(defroute "/" [] (page runway-view))
-(defroute "/login" [] (page gateway-view))
-(defroute "/logout" [] (page gateway-view))
-(defroute "/register" [] (page gateway-view))
-(defroute "/account" [] (page gateway-view))
-(defroute "/local" [] (page local-view))
-(defroute "/teleport" [] (page teleport-view))
-
-(defn refresh-navigation []
-  (let [token (.getToken history)
-        set-active (fn [nav]
-                     (assoc nav :active (= (:path nav) token)))]
+(defn refresh-navigation [new-path]
+  (let [set-active (fn [nav]
+                     (assoc nav :active (= (:path nav) new-path)))]
     (swap! app-state
            (fn [x] (assoc x :nav (map set-active (:nav x)))))))
+
+(defn page [component path]
+  (let [r (render-page component app-state app-container)]
+    (refresh-navigation path)
+    r))
+
+(defroute "/" [] (page runway-view "/"))
+(defroute "/login" [] (page gateway-view "/login"))
+(defroute "/logout" [] (page gateway-view "/logout"))
+(defroute "/register" [] (page gateway-view "/register"))
+(defroute "/account" [] (page gateway-view "/account"))
+(defroute "/local" [] (page local-view "/local"))
+(defroute "/teleport" [] (page teleport-view "/teleport"))
  
 (defn on-navigate [event]
   (refresh-navigation)
   (secretary/dispatch! (.-token event)))
-
+;
 (def history (History.))
- 
+; 
 (doto history
   (goog.events/listen EventType/NAVIGATE on-navigate)
   (.setEnabled true))

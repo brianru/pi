@@ -26,6 +26,7 @@
     [:body
      [:div#app-container
       (include-js "http://fb.me/react-0.11.1.js"
+                  "//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min.js"
                   "js/out/goog/base.js"
                   "js/main.js")
       [:script {:type "text/javascript"} "goog.require(\"pi.main\");"]]]))
