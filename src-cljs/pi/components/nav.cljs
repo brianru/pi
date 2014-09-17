@@ -4,6 +4,8 @@
             [om.dom          :as dom
                              :include-macros true]
             [clojure.string :refer [blank?]]
+            [secretary.core  :as secretary
+                             :include-macros true]
             ))
 
 (defn nav-item [{:keys [name path active side restricted]} owner]
@@ -11,7 +13,8 @@
     om/IRenderState
     (render-state [this state]
       (dom/li #js {:className (if active "active" "")}
-        (dom/a #js {:href (str "#" path)}
+        (dom/a #js {:href "#"
+                    :onClick #(secretary/dispatch! path)}
                (or (om/get-state owner name) name))))))
 
 (defn nav-for [{:keys [nav username]} side]

@@ -6,9 +6,10 @@
                              :include-macros true]
             [om.dom          :as dom
                              :include-macros true]
+            [secretary.core  :as secretary
+                             :include-macros true]
             [pi.handlers.chsk :refer [chsk chsk-state]]
-            [pi.components.nav :refer [navbar]]
-    ))
+            [pi.components.nav :refer [navbar]]))
 
 (defn register [app owner]
   nil)
@@ -23,8 +24,9 @@
       (fn [{:keys [?status] :as ajax-resp}]
         (if (= ?status 200)
           (do
+            (secretary/dispatch! "/local")
+            ;(set! (.-hash js/window.location) "/local")
             (om/transact! app :username (fn [_] username))
-            (set! (.-hash js/window.location) "/local")
             (s/chsk-reconnect! chsk)
             )
           (println "failed to login:" ajax-resp))))))
@@ -39,7 +41,8 @@
         (if (= ?status 200)
           (do
             (om/transact! app :username (fn [_] ""))
-            (set! (.-hash js/window.location) "/")
+            (secretary/dispatch! "/")
+            ;(set! (.-hash js/window.location) "/")
             (s/chsk-reconnect! chsk))
         (println "failed to logout:" ajax-resp))))))
 
