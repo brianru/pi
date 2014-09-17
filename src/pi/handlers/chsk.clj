@@ -1,3 +1,5 @@
+;; TODO move distance calculation to the server
+;; it has to be done when finding in-radius msgs anyway
 (ns pi.handlers.chsk 
   (:require [taoensso.sente     :as s]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
@@ -46,9 +48,13 @@
 (defmethod event-msg-handler :chsk/uidport-close [ev-msg] nil)
 (defmethod event-msg-handler :chsk/ws-ping [ev-msg] nil)
 
+(defn radius [_]
+  ;; calculate distance of every msg in the last hour
+  ;; 
+  30.0)
+
 (defn in-radius? [user loc msg]
-  (println loc msg)
-  true)
+  (< (distance loc (:location msg)) (radius loc)))
 
 ;; TODO not sure if this is working right
 (defmethod event-msg-handler :init/messages

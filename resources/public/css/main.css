@@ -8,6 +8,12 @@ body {
     background-color: #FFFFFF;
     padding-top: 70px;
 }
+textarea {
+    resize: none;
+}
+.hide {
+    display: none;
+}
 .jumbotron {
     background-color: inherit !important;
 }
@@ -33,11 +39,12 @@ body {
 .btn {
     width: 132px;
 }
-.message > .top-row {
-    font-size: 14px;
+.message > .top-row > div:first-child {
+    font-size: 16px;
 }
-.message > .bottom-row {
+.message > .row {
     font-size: 12px;
+    line-height: 24px;
 }
 .message > .row > div:last-child {
     text-align: right;

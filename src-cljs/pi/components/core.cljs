@@ -1,9 +1,9 @@
 (ns pi.components.core
   (:require-macros
             [cljs.core.async.macros :as asyncm :refer [go go-loop]])
-  (:require [pi.models.state :refer [app-state]]
-            [pi.handlers.chsk :refer [chsk chsk-send! chsk-state]]
+  (:require [pi.handlers.chsk :refer [chsk chsk-send! chsk-state]]
             [pi.util :as util]
+            [clojure.string :refer [blank?]]
             ;;don't like sente here. result of using ajax with callback :(
             [taoensso.sente :as s]
             [secretary.core :as secretary]
@@ -13,6 +13,7 @@
                              :include-macros true]
             [cljs.core.async :as async :refer [put! chan <! >!
                                      sliding-buffer]]
+            [sablono.core :as html :refer-macros [html]]
     ))
 
 (defn login [app owner]
@@ -26,9 +27,8 @@
         (if (= ?status 200)
           (do
             (om/transact! app :username (fn [_] username))
-            (secretary/dispatch! "/app")
+            (set! (.-hash js/window.location) "/app")
             (s/chsk-reconnect! chsk)
-            ;; TODO doesn't work very well
             )
           (println "failed to login:" ajax-resp))))))
 
@@ -52,35 +52,39 @@
       (chsk-send! [:submit/post post])
       (om/set-state! owner :post ""))))
 
-;; NOTE I don't like this navbar.
+(defn nav-item [{:keys [name path active side restricted]} owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (let [name (if (keyword? name)
+                   (om/get-state owner name)
+                   name)]
+        (dom/li #js {:className (str (if active "active")
+                                     (if (blank? name) "hide"))}
+          (dom/a #js {:href (str "#" path)} name))))))
+
+(defn left-nav [itms]
+  (filter #(= (:side %) :left) itms))
+(defn right-nav [itms]
+  (filter #(= (:side %) :right) itms))
 (defn navbar [app owner]
   (reify
     om/IRenderState
     (render-state [this state]
-      (dom/nav #js {:className "navbar navbar-default navbar-fixed-top"}
+      (dom/nav #js {:className "navbar navbar-default navbar-fixed-top"
+                    :role "navigation"}
         (dom/div #js {:className "container"}
           (dom/div #js {:className "navbar-header"}
-            (dom/button #js {:type "button"
-                             :className "navbar-toggle collapsed"
-                             :data-toggle "collapse"
-                             :data-target "#bs-example-navbar-collapse-1"}
-              (dom/span #js {:className "sr-only"} "Toggle navigation")
-              (dom/span #js {:className "icon-bar"} nil)
-              (dom/span #js {:className "icon-bar"} nil)
-              (dom/span #js {:className "icon-bar"} nil))
-            (dom/a #js {:className "navbar-brand"
-                        :href "#"}
-                   "Pi"))
-
-          (dom/div #js {:className "collapse navbar-collapse"
-                        :id "bs-example-navbar-collapse-1"}
-            (dom/ul #js {:className "nav navbar-nav"}
-              (dom/li #js {:className "active"}
-                (dom/a #js {:href "#/app"} "Local"))
-              (dom/li nil
-                (dom/a #js {:href "#/app/local"} "Teleport"))))
-
-                 )))))
+            (dom/div #js {:className "navbar-brand col-sm-1"} 
+              (dom/span #js {:className "glyphicon glyphicon-globe"}
+                        nil)))
+          (dom/div nil
+            (apply dom/ul #js {:className "nav navbar-nav"}
+              (om/build-all nav-item (-> app :nav left-nav) nil))
+            (apply dom/ul #js {:className "nav navbar-nav navbar-right"}
+              (om/build-all nav-item (-> app :nav right-nav)
+                {:init-state {:username (:username app)}}))
+                 ))))))
 
 (defn landing-view [app owner]
   (reify
@@ -91,9 +95,9 @@
         (dom/div #js {:className "container login"}
           (dom/div #js {:className "form-group"}
             (dom/label #js {:htmlFor "inputEmail3"
-                            :className "col-sm-2 control-label"}
+                            :className "col-xs-2 control-label"}
                        "Username")
-            (dom/div #js {:className "col-sm-10"}
+            (dom/div #js {:className "col-xs-10"}
               (dom/input #js {:type "text"
                               :ref "login-username"
                               :className "form-control"
@@ -102,7 +106,7 @@
                                             (login app owner))
                               :placeholder "Username"})))
           (dom/div #js {:className "form-group"}
-            (dom/div #js {:className "col-sm-offset-2 col-sm-10"}
+            (dom/div #js {:className "col-xs-offset-2 col-xs-10"}
               (dom/button #js {:type "button"
                                :className "btn btn-primary"
                                :onTouch #(login app owner)
@@ -115,8 +119,9 @@
     (render-state [this _]
       (dom/div #js {:className "row message"}
         (dom/div #js {:className "row top-row"}
-          (dom/div #js {:className "col-md-8"} (:msg message))
-          (dom/div #js {:className "col-md-4"} (:time message)))
+          (dom/div #js {:className "col-xs-8 col-md-8"} (:msg message))
+          (dom/div #js {:className "col-xs-4 col-md-4"} (util/format-timestamp
+                                                 (:time message))))
         (dom/div #js {:className "row bottom-row"}
           (dom/div #js {:className "col-xs-6 col-md-2"}
                    (:author message))
@@ -182,15 +187,3 @@
         (om/build messages-view app {:init-state state})
         (om/build footer-view app {:init-state state})))))
   )
-
-;; TODO should these be in the routes namespace?
-(def app-container (. js/document (getElementById "app-container")))
-
-(defn render-page [component state target]
-  (om/root component state {:target target}))
-
-;; Do these have to be separate functions?
-;; Useful if I switch up app-state, but idk if that's necessary.
-(defn page [component]
-  (render-page component app-state app-container))
-

@@ -7,6 +7,7 @@
                  [org.clojure/clojurescript "0.0-2322"]
                  [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
                  [environ "1.0.0"]
+                 [com.taoensso/tower "3.0.1"] ;; TODO
 
                  ;; Web communications
                  [ring/ring-core "1.3.1"]
@@ -23,8 +24,9 @@
                  ;; Client application
                  [om "0.7.3"]
                  [secretary "1.2.1"]
-                 [sablono "0.2.22"]
+                 [sablono "0.2.22"] ;; TODO
                  [geo-clj "0.3.15"]
+                 [com.andrewmcveigh/cljs-time "0.1.6"]
                  ]
   :min-lein-version "2.3.3"
   :main pi.main

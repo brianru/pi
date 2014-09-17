@@ -14,21 +14,3 @@
         pt2 (geo/point 4326 (:latitude loc2) (:longitude loc2))
         dist (geo/distance-to pt1 pt2)]
     dist))
-
-(defn format-km [x]
-  (cond
-    (nil? x) x
-    :else (str (gstring/padNumber x 1, 2) "km")))
-
-(defn format-timestamp [t]
-  t)
-
-
-(defn display-location [{:keys [latitude longitude]}]
-  (str "lat: " latitude ", long: " longitude))
-
-(defn parse-location [x]
-  {:latitude js/x.coords.latitude
-   :longitude js/x.coords.longitude})
-
-
