@@ -56,17 +56,15 @@
   (reify
     om/IRenderState
     (render-state [this state]
-      (let [name (if (keyword? name)
-                   (om/get-state owner name)
-                   name)]
-        (dom/li #js {:className (str (if active "active")
-                                     (if (blank? name) "hide"))}
-          (dom/a #js {:href (str "#" path)} name))))))
+      (dom/li #js {:className (if active "active" "")}
+        (dom/a #js {:href (str "#" path)} 
+               (or (om/get-state owner name) name))))))
 
-(defn left-nav [itms]
-  (filter #(= (:side %) :left) itms))
-(defn right-nav [itms]
-  (filter #(= (:side %) :right) itms))
+(defn nav-for [{:keys [nav username]} side]
+  (filter (fn [itm] (and (= (:side itm) side)
+                         (= (:restricted itm) (-> username blank? not))))
+          nav))
+
 (defn navbar [app owner]
   (reify
     om/IRenderState
@@ -80,10 +78,11 @@
                         nil)))
           (dom/div nil
             (apply dom/ul #js {:className "nav navbar-nav"}
-              (om/build-all nav-item (-> app :nav left-nav) nil))
+              (om/build-all nav-item (nav-for app :left) 
+                            {:init-state {:username (:username app)}}))
             (apply dom/ul #js {:className "nav navbar-nav navbar-right"}
-              (om/build-all nav-item (-> app :nav right-nav)
-                {:init-state {:username (:username app)}}))
+              (om/build-all nav-item (nav-for app :right) 
+                            {:init-state {:username (:username app)}}))
                  ))))))
 
 (defn landing-view [app owner]

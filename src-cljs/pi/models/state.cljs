@@ -3,7 +3,7 @@
 (def app-state
   (atom
     {:nav [{:name "Register"
-            :path "/"
+            :path "/register"
             :active false
             :side :right
             :restricted false}
@@ -14,6 +14,11 @@
             :restricted false}
            {:name :username
             :path "/account"
+            :active false
+            :side :right
+            :restricted true}
+           {:name "Logout"
+            :path "/logout"
             :active false
             :side :right
             :restricted true}
