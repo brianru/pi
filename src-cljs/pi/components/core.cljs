@@ -16,6 +16,9 @@
             [sablono.core :as html :refer-macros [html]]
     ))
 
+(defn register [app owner]
+  nil)
+
 (defn login [app owner]
   (let [username (-> (om/get-node owner "login-username") .-value)]
     (s/ajax-call "/login"
@@ -27,10 +30,19 @@
         (if (= ?status 200)
           (do
             (om/transact! app :username (fn [_] username))
-            (set! (.-hash js/window.location) "/app")
+            (set! (.-hash js/window.location) "/local")
             (s/chsk-reconnect! chsk)
             )
           (println "failed to login:" ajax-resp))))))
+
+(defn logout [{:keys [username] :as app} owner]
+  (s/ajax-call "/logout"
+    {:method :post
+     :params {:user-id username
+              :csrf-token (:csrf-token @chsk-state)}}
+    (fn [{:keys [?status] :as ajax-resp}]
+      nil ;; TODO handle callback
+      )))
 
 (defn handle-change [e owner {:keys [post]}]
   (om/set-state! owner :post (.. e -target -value)))
@@ -39,18 +51,6 @@
   (if (.hasOwnProperty js/navigator "geolocation")
     (.getCurrentPosition js/navigator.geolocation
                          #(put! locate (util/parse-location %)))))
-
-(defn submit-post [app owner]
-  (let [msg (-> (om/get-node owner "new-post") .-value)
-        author (:username @app)
-        loc (:location @app)
-        post {:msg msg :author author :location loc}]
-    (when post
-      ;; not adding to state b/c must first get ID from server
-      ;; might be worth doing something different to make it feel
-      ;; more responsive
-      (chsk-send! [:submit/post post])
-      (om/set-state! owner :post ""))))
 
 (defn nav-item [{:keys [name path active side restricted]} owner]
   (reify
@@ -127,12 +127,48 @@
           (dom/div #js {:className "col-xs-6 col-md-2 col-md-offset-8"}
                    (util/format-km (:distance message))))))))
 
-(defn messages-view [app owner]
+;; TODO broke submit-post
+(defn submit-post [{:keys [username location] :as app} owner]
+  (let [msg  (om/get-state owner :post)
+        post {:msg msg :author username :location location}]
+    (println post)
+    (when msg
+      (chsk-send! [:submit/post post])
+      (om/set-state! owner :post "")
+      )))
+
+(defn new-post [{:keys [username location] :as app} owner]
   (reify
     om/IInitState
     (init-state [_]
-      {:post ""
-       :locate (chan (sliding-buffer 3))})
+      {:post ""})
+
+    om/IRenderState
+    (render-state [this state]
+      (let [has-access (-> username blank? not)]
+        (dom/div #js {:className "new-post"}
+          (dom/textarea #js {:ref "new-post"
+                             :className "form-control"
+                             :placeholder "What's happening?"
+                             :disabled (not has-access)
+                             :rows "3"
+                             :value (:post state)
+                             :onChange #(handle-change % owner state)})
+          (dom/div #js {:className "row"}
+            (dom/div #js {:className "pull-left"} username)
+            (dom/div #js {:className "pull-right"}
+              (dom/button #js {:type "button"
+                               :disabled (not has-access)
+                               :className "btn btn-primary"
+                               :onTouch #(submit-post app owner)
+                               :onClick #(submit-post app owner)}
+                          "Submit"))))))))
+
+(defn local-view [app owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:locate (chan (sliding-buffer 3))})
 
     om/IWillMount
     (will-mount [_]
@@ -155,23 +191,10 @@
     om/IRenderState
     (render-state [this state]
       (dom/div #js {:className "container"}
-        (om/build navbar app {})
+        (om/build navbar (select-keys app [:username :nav]) {})
         (dom/h4 nil (util/display-location (:location app)))
-        (dom/div #js {:className "new-post"}
-          (dom/textarea #js {:ref "new-post"
-                             :className "form-control"
-                             :placeholder "What's happening?"
-                             :rows "3"
-                             :value (:post state)
-                             :onChange #(handle-change % owner state)})
-          (dom/div #js {:className "row"}
-            (dom/div #js {:className "pull-left"} (:username app))
-            (dom/div #js {:className "pull-right"}
-              (dom/button #js {:type "button"
-                               :className "btn btn-primary"
-                               :onTouch #(submit-post app owner)
-                               :onClick #(submit-post app owner)}
-                          "Submit"))))
+        (om/build new-post
+                  (select-keys app [:location :post :username]) nil)
         (apply dom/div #js {:className "message-list"}
                (om/build-all message-view  (:messages app)
                              {:init-state state}))))))
@@ -183,6 +206,6 @@
     (render-state [this state]
       (dom/div nil
         (om/build header-view app {:init-state state})
-        (om/build messages-view app {:init-state state})
+        (om/build local-view app {:init-state state})
         (om/build footer-view app {:init-state state})))))
   )

@@ -1,6 +1,6 @@
 (ns pi.main
   (:require [pi.models.state :refer [app-state]]
-            [pi.components.core :refer [landing-view messages-view]]
+            [pi.components.core :refer [landing-view local-view]]
             [pi.handlers.chsk :refer [start-router!]]
             [om.core         :as om
                              :include-macros true]
@@ -26,7 +26,11 @@
   (render-page component app-state app-container))
 
 (defroute "/" [] (page landing-view))
-(defroute "/app" [] (page messages-view))
+(defroute "/login" [] (page landing-view))
+(defroute "/register" [] (page landing-view))
+(defroute "/account" [] (page local-view))
+(defroute "/local" [] (page local-view))
+(defroute "/teleport" [] (page local-view))
 
 (defn refresh-navigation []
   (let [token (.getToken history)
@@ -44,11 +48,6 @@
 (doto history
   (goog.events/listen EventType/NAVIGATE on-navigate)
   (.setEnabled true))
-
-;(let [h (History.)]
-;    (goog.events/listen h EventType/NAVIGATE
-;                        #(secretary/dispatch! (.-token %)))
-;    (doto h (.setEnabled true)))
 
 (defn start! []
   (start-router!))

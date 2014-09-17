@@ -23,12 +23,12 @@
             :side :right
             :restricted true}
            {:name "Local"
-            :path "/app"
+            :path "/local"
             :active false
             :side :left
             :restricted true}
            {:name "Teleport"
-            :path "/app/teleport"
+            :path "/teleport"
             :active false
             :side :left
             :restricted true}]
