@@ -29,8 +29,3 @@
                   "js/out/goog/base.js"
                   "js/main.js")
       [:script {:type "text/javascript"} "goog.require(\"pi.main\");"]]]))
-      
-
-           
-
-

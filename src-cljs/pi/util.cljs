@@ -1,5 +1,6 @@
 (ns pi.util
   (:require [geo.core        :as geo]
+            [taoensso.encore :refer [exp-backoff]]
             [goog.string :as gstring]
             ))
 
@@ -23,7 +24,6 @@
 (defn format-timestamp [t]
   t)
 
-
 (defn display-location [{:keys [latitude longitude]}]
   (str "lat: " latitude ", long: " longitude))
 
@@ -31,4 +31,17 @@
   {:latitude js/x.coords.latitude
    :longitude js/x.coords.longitude})
 
-
+;; TODO not async. figure out how to use core.async
+;; TODO this should really be refactored to be made generically useful
+;; TODO create a state machine with restart and kill predicate fns
+;; called on the target fn's return value
+(defn exp-repeater "Takes a function and a number of repetitions."
+  ([f m]
+   (exp-repeater f m 1))
+  ([f m n]
+   (exp-repeater f m n {:factor 7}))
+  ([f m n opts]
+   (when-not (> n m)
+     (let [f* (fn [] (do (println m n)
+                       (f) (exp-repeater f m (inc n) opts)))]
+       (js/setTimeout f* (* (exp-backoff n opts) 100))))))

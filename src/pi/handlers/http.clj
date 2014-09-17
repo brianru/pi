@@ -6,8 +6,8 @@
             (compojure [core              :refer [defroutes GET POST]]
                        [route             :as route])
             [pi.views.layout              :as layout]
+            [pi.routes.landing            :refer [landing-page]]
             [pi.handlers.chsk :refer [ring-ajax-get-ws ring-ajax-post]]
-            [hiccup.core                  :refer :all]
   ))
 
 (defn login! [ring-request]
@@ -20,15 +20,10 @@
         {:keys [user-id]} params]
     (println user-id)
     {:status 200 
-     :session nil}))
-
-(defn landing-page [req]
-  (layout/common
-    [:p "Hello world!"]))
+     :session (assoc session :uid "")}))
 
 (defroutes routes
   (GET  "/"        req (layout/app))
-  (GET  "/ext"     req (landing-page req))
   (POST "/login"   req (login! req))
   (POST "/logout"  req (logout! req))
 

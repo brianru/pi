@@ -7,6 +7,7 @@
                  [org.clojure/clojurescript "0.0-2322"]
                  [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
                  [environ "1.0.0"]
+                 [com.taoensso/encore "1.9.1"]
                  [com.taoensso/tower "3.0.1"] ;; TODO
 
                  ;; Web communications

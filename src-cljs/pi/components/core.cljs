@@ -118,13 +118,18 @@
                                :onTouch #(login app owner)
                                :onClick #(login app owner)}
                           "Submit"))))
-        (dom/div #js {:className "logout"}
-          (dom/button #js {:type "button"
-                           :class "btn btn-primary"
-                           :onTouch #(logout app owner)
-                           :onClick #(logout app owner)}
-                      "Logout"
-                           ))))))
+                           ))))
+
+(defn logout-view [app owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (dom/div #js {:className "logout"}
+               (dom/button #js {:type "button"
+                                :className "red btn btn-primary"
+                                :onTouch #(logout app owner)
+                                :onClick #(logout app owner)}
+                           "Logout")))))
 
 (defn message-view [message owner]
   (reify
@@ -199,10 +204,8 @@
                                 :location (:location @app)}])))
               (recur))))
       (let [locate (om/get-state owner :locate)]
-        (locateMe locate) ;; init
-        ;; refresh every minute TODO backoff
-        (js/setInterval #(locateMe locate) 60000))
-      )
+        (locateMe locate)))
+        ;(util/exp-repeater #(locateMe locate) 7)))
 
     om/IRenderState
     (render-state [this state]
@@ -215,14 +218,3 @@
                    (select-keys app [:location :username])})
         (apply dom/div #js {:className "message-list"}
                (om/build-all message-view (get app :messages)))))))
-
-(comment
-(defn local-view [app owner]
-  (reify
-    omIRenderState
-    (render-state [this state]
-      (dom/div nil
-        (om/build header-view app {:init-state state})
-        (om/build local-view app {:init-state state})
-        (om/build footer-view app {:init-state state})))))
-  )
