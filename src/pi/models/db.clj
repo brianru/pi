@@ -5,9 +5,9 @@
 (def db (or (env :database-url)
             "postgresql://localhost:5432/pi"))
 
-(sql/with-db-connection [con db]
-  (println (sql/query con
-                      "select nspname from pg_catalog.pg_namespace;")))
+;(sql/with-db-connection [con db]
+;  (println (sql/query con
+;                      "select nspname from pg_catalog.pg_namespace;")))
 
 ;(defn init []
 ;  (sql/db-do-commands db
