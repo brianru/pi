@@ -27,6 +27,7 @@
 
 (defroute "/" [] (page landing-view))
 (defroute "/login" [] (page landing-view))
+(defroute "/logout" [] (page landing-view))
 (defroute "/register" [] (page landing-view))
 (defroute "/account" [] (page local-view))
 (defroute "/local" [] (page local-view))

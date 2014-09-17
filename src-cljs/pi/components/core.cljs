@@ -35,14 +35,19 @@
             )
           (println "failed to login:" ajax-resp))))))
 
-(defn logout [{:keys [username] :as app} owner]
-  (s/ajax-call "/logout"
-    {:method :post
-     :params {:user-id username
-              :csrf-token (:csrf-token @chsk-state)}}
-    (fn [{:keys [?status] :as ajax-resp}]
-      nil ;; TODO handle callback
-      )))
+(defn logout [app owner]
+  (let [{:keys [uid csrf-token]} @chsk-state]
+    (s/ajax-call "/logout"
+      {:method :post
+       :params {:user-id uid
+                :csrf-token csrf-token}}
+      (fn [{:keys [?status] :as ajax-resp}]
+        (if (= ?status 200)
+          (do
+            (om/transact! app :username (fn [_] ""))
+            (set! (.-hash js/window.location) "/")
+            (s/chsk-reconnect! chsk))
+        (println "failed to logout:" ajax-resp))))))
 
 (defn handle-change [e owner {:keys [post]}]
   (om/set-state! owner :post (.. e -target -value)))
@@ -110,7 +115,14 @@
                                :className "btn btn-primary"
                                :onTouch #(login app owner)
                                :onClick #(login app owner)}
-                          "Submit"))))))))
+                          "Submit"))))
+        (dom/div #js {:className "logout"}
+          (dom/button #js {:type "button"
+                           :class "btn btn-primary"
+                           :onTouch #(logout app owner)
+                           :onClick #(logout app owner)}
+                      "Logout"
+                           ))))))
 
 (defn message-view [message owner]
   (reify

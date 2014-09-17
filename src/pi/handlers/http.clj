@@ -15,6 +15,13 @@
         {:keys [user-id]} params]
     {:status 200 :session (assoc session :uid user-id)}))
 
+(defn logout! [ring-request]
+  (let [{:keys [session params]} ring-request
+        {:keys [user-id]} params]
+    (println user-id)
+    {:status 200 
+     :session nil}))
+
 (defn landing-page [req]
   (layout/common
     [:p "Hello world!"]))
@@ -23,6 +30,7 @@
   (GET  "/"        req (layout/app))
   (GET  "/ext"     req (landing-page req))
   (POST "/login"   req (login! req))
+  (POST "/logout"  req (logout! req))
 
   ;; These two connect the http and chsk servers.
   (GET  "/chsk"    req (#'ring-ajax-get-ws req))

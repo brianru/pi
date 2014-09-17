@@ -1,6 +1,5 @@
 (ns pi.util
   (:require [geo.core        :as geo]
-            [goog.string :as gstring]
             ))
 
 (defn distance

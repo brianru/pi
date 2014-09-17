@@ -3,6 +3,7 @@
 (ns pi.handlers.chsk 
   (:require [taoensso.sente     :as s]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
+            [pi.util :as util]
             ))
 
 (defn- now [] (quot (System/currentTimeMillis) 1000))
@@ -54,7 +55,7 @@
   30.0)
 
 (defn in-radius? [user loc msg]
-  (< (distance loc (:location msg)) (radius loc)))
+  (< (util/distance loc (:location msg)) (radius loc)))
 
 ;; TODO not sure if this is working right
 (defmethod event-msg-handler :init/messages
