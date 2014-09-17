@@ -1,6 +1,9 @@
 (ns pi.main
   (:require [pi.models.state :refer [app-state]]
-            [pi.components.core :refer [landing-view local-view]]
+            [pi.components.runway :refer [runway-view]]
+            [pi.components.gateway :refer [gateway-view]]
+            [pi.components.local :refer [local-view]]
+            [pi.components.teleport :refer [teleport-view]]
             [pi.handlers.chsk :refer [start-router!]]
             [om.core         :as om
                              :include-macros true]
@@ -25,13 +28,13 @@
 (defn page [component]
   (render-page component app-state app-container))
 
-(defroute "/" [] (page landing-view))
-(defroute "/login" [] (page landing-view))
-(defroute "/logout" [] (page landing-view))
-(defroute "/register" [] (page landing-view))
-(defroute "/account" [] (page local-view))
+(defroute "/" [] (page runway-view))
+(defroute "/login" [] (page gateway-view))
+(defroute "/logout" [] (page gateway-view))
+(defroute "/register" [] (page gateway-view))
+(defroute "/account" [] (page gateway-view))
 (defroute "/local" [] (page local-view))
-(defroute "/teleport" [] (page local-view))
+(defroute "/teleport" [] (page teleport-view))
 
 (defn refresh-navigation []
   (let [token (.getToken history)

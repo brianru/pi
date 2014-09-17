@@ -6,7 +6,6 @@
             (compojure [core              :refer [defroutes GET POST]]
                        [route             :as route])
             [pi.views.layout              :as layout]
-            [pi.routes.landing            :refer [landing-page]]
             [pi.handlers.chsk :refer [ring-ajax-get-ws ring-ajax-post]]
   ))
 

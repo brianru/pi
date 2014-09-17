@@ -12,7 +12,7 @@
             :side :right
             :restricted false}
            {:name "Login"
-            :path "/"
+            :path "/login"
             :active false
             :side :right
             :restricted false}
