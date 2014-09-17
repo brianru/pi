@@ -2,6 +2,10 @@
 
 (def app-state
   (atom
+    ; TODO this 
+    ;{:user {:uid ""
+    ;        :location {:latitude 90
+    ;                   :longitude 0}}}
     {:nav [{:name "Register"
             :path "/register"
             :active false

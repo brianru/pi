@@ -1,7 +1,8 @@
 ;; TODO move distance calculation to the server
 ;; it has to be done when finding in-radius msgs anyway
 (ns pi.handlers.chsk 
-  (:require [taoensso.sente     :as s]
+  (:require [taoensso.sente :as s]
+            [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
             [pi.util :as util]
             ))
@@ -55,16 +56,19 @@
   30.0)
 
 (defn in-radius? [user loc msg]
-  (< (util/distance loc (:location msg)) (radius loc)))
+  (if (and (util/coordinate? (:location msg))
+           (util/coordinate? loc))
+    (< (util/distance loc (:location msg)) (radius loc))
+    false))
 
-;; TODO not sure if this is working right
-(defmethod event-msg-handler :init/messages
+(defmethod event-msg-handler :update/location
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
-  (if-let [uid (-> ring-req :session :uid)]
-    (let [{:keys [username location]} (last event)
-          msgs (filter #(in-radius? username location %) @all-msgs)]
-      (map #(chsk-send! uid %) msgs))
-    (println "what, why?")))
+  (let [uid (-> ring-req :session :uid)]
+    (if-not (or (nil? uid) (blank? uid))
+      (let [{:keys [username location]} (last event)
+            msgs (filter #(in-radius? username location %) @all-msgs)]
+        (println "msg count:" (count msgs) "/" (count @all-msgs))
+        (chsk-send! uid [:swap/posts msgs])))))
 
 (defmethod event-msg-handler :submit/post
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]

@@ -49,7 +49,7 @@
             (s/chsk-reconnect! chsk))
         (println "failed to logout:" ajax-resp))))))
 
-(defn handle-change [e owner {:keys [post]}]
+(defn handle-change [e owner]
   (om/set-state! owner :post (.. e -target -value)))
 
 (defn locateMe [locate]
@@ -83,9 +83,11 @@
                         nil)))
           (dom/div nil
             (apply dom/ul #js {:className "nav navbar-nav"}
+        ;; FIXME not the right way to pass state to a component
               (om/build-all nav-item (nav-for app :left) 
                             {:init-state {:username (:username app)}}))
             (apply dom/ul #js {:className "nav navbar-nav navbar-right"}
+        ;; FIXME not the right way to pass state to a component
               (om/build-all nav-item (nav-for app :right) 
                             {:init-state {:username (:username app)}}))
                  ))))))
@@ -130,47 +132,50 @@
     (render-state [this _]
       (dom/div #js {:className "row message"}
         (dom/div #js {:className "row top-row"}
-          (dom/div #js {:className "col-xs-8 col-md-8"} (:msg message))
-          (dom/div #js {:className "col-xs-4 col-md-4"} (util/format-timestamp
-                                                 (:time message))))
+          (dom/div #js {:className "col-xs-8 col-md-8"}
+                   (get message :msg))
+          (dom/div #js {:className "col-xs-4 col-md-4"}
+                   (util/format-timestamp (get message :time))))
         (dom/div #js {:className "row bottom-row"}
           (dom/div #js {:className "col-xs-6 col-md-2"}
-                   (:author message))
+                   (get message :author))
           (dom/div #js {:className "col-xs-6 col-md-2 col-md-offset-8"}
-                   (util/format-km (:distance message))))))))
+                   (util/format-km (get message :distance))))))))
 
-;; TODO broke submit-post
-(defn submit-post [{:keys [username location] :as app} owner]
+(defn submit-post [app owner]
   (let [msg  (om/get-state owner :post)
-        post {:msg msg :author username :location location}]
-    (println post)
+        post {:msg msg
+              :author (get @app :username)
+              :location (get @app :location)}]
     (when msg
       (chsk-send! [:submit/post post])
       (om/set-state! owner :post "")
       )))
 
-(defn new-post [{:keys [username location] :as app} owner]
+(defn new-post [app owner]
   (reify
     om/IInitState
     (init-state [_]
       {:post ""})
 
     om/IRenderState
-    (render-state [this state]
-      (let [has-access (-> username blank? not)]
+    (render-state [this {:keys [post] :as state}]
+      (let [username (get app :username)
+            has-access (-> username blank? not)]
         (dom/div #js {:className "new-post"}
           (dom/textarea #js {:ref "new-post"
                              :className "form-control"
                              :placeholder "What's happening?"
                              :disabled (not has-access)
                              :rows "3"
-                             :value (:post state)
-                             :onChange #(handle-change % owner state)})
+                             :value post
+                             :onChange #(handle-change % owner)})
           (dom/div #js {:className "row"}
             (dom/div #js {:className "pull-left"} username)
             (dom/div #js {:className "pull-right"}
               (dom/button #js {:type "button"
-                               :disabled (not has-access)
+                               :disabled (or (not has-access)
+                                             (blank? post))
                                :className "btn btn-primary"
                                :onTouch #(submit-post app owner)
                                :onClick #(submit-post app owner)}
@@ -181,35 +186,35 @@
     om/IInitState
     (init-state [_]
       {:locate (chan (sliding-buffer 3))})
-
     om/IWillMount
     (will-mount [_]
       (let [locate (om/get-state owner :locate)]
         (go (loop []
-              (let [location (<! locate)]
-                (om/transact! app :location #(merge % location))
-                (when (and (not (:initialized @app))
-                           (:username @app))
-                  (chsk-send! [:init/messages
+              (let [new-loc (<! locate)
+                    old-loc (:location @app)]
+                (when-not (= old-loc new-loc)
+                  (om/transact! app :location #(merge % new-loc))
+                  (chsk-send! [:update/location
                                {:username (:username @app)
-                                :location (:location @app)}])
-                  (om/transact! app :initialized (fn [_] true)))
-              (recur)))))
+                                :location (:location @app)}])))
+              (recur))))
       (let [locate (om/get-state owner :locate)]
         (locateMe locate) ;; init
-        ;; refresh every minute
-        (js/setInterval #(locateMe locate) 60000)))
+        ;; refresh every minute TODO backoff
+        (js/setInterval #(locateMe locate) 60000))
+      )
 
     om/IRenderState
     (render-state [this state]
       (dom/div #js {:className "container"}
-        (om/build navbar (select-keys app [:username :nav]) {})
+        (om/build navbar (select-keys app [:username :nav]))
         (dom/h4 nil (util/display-location (:location app)))
-        (om/build new-post
-                  (select-keys app [:location :post :username]) nil)
+        ;; FIXME not the right way to pass state to a component
+        (om/build new-post app
+                  {:init-state
+                   (select-keys app [:location :username])})
         (apply dom/div #js {:className "message-list"}
-               (om/build-all message-view  (:messages app)
-                             {:init-state state}))))))
+               (om/build-all message-view (get app :messages)))))))
 
 (comment
 (defn local-view [app owner]

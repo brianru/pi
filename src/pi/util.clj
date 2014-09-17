@@ -1,5 +1,5 @@
 (ns pi.util
-  (:require [geo.core        :as geo]
+  (:require [geo.core :as geo]
             ))
 
 (defn distance
@@ -13,3 +13,7 @@
         pt2 (geo/point 4326 (:latitude loc2) (:longitude loc2))
         dist (geo/distance-to pt1 pt2)]
     dist))
+
+(defn coordinate? [{:keys [latitude longitude]}]
+  (and (geo/latitude? latitude)
+       (geo/longitude? longitude)))

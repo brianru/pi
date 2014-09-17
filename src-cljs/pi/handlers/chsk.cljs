@@ -25,16 +25,18 @@
   [{:as ev-msg :keys [event ?data]}]
   nil)
 
-;; TODO refactor to take list of posts
 (defmethod event-msg-handler :new/post
   [{:as ev-msg :keys [event ?data]}]
   (let [d (last ?data)
         post (assoc d :distance (util/distance (:location d)
                                              (:location @app-state)))]
-    ;(println post)
     (if (> (:id post) (:max-id @app-state))
       (swap! app-state assoc :messages
              (cons post (:messages @app-state))))))
+
+(defmethod event-msg-handler :swap/posts
+  [{:as ev-msg :keys [event ?data]}]
+  (swap! app-state assoc :messages (last ?data)))
 
 ;; INIT
 (def        router_ (atom nil))
