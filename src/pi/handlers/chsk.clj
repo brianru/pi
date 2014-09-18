@@ -1,7 +1,8 @@
 ;; TODO move distance calculation to the server
 ;; it has to be done when finding in-radius msgs anyway
 (ns pi.handlers.chsk 
-  (:require [taoensso.sente :as s]
+  (:require [clojure.core.cache :as cache]
+            [taoensso.sente :as s]
             [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
             [pi.util :as util]
@@ -35,9 +36,9 @@
                          :author "dr. seuss"
                          :location {:latitude 90 :longitude 0}}]))
 
-(defonce all-users (ref [{:uid
-                          :password
-                          :location
+(defonce all-users (ref [{:uid nil
+                          :password nil
+                          :location nil
                           }]))
 
 (let [{:keys [ch-recv
