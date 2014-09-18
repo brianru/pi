@@ -4,7 +4,7 @@
   :license {:name "MIT"
             :url ""}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2322"]
+                 [org.clojure/clojurescript "0.0-2341"]
                  [org.clojure/core.cache "0.6.4"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
@@ -40,7 +40,8 @@
   :jar-name "pi.jar"
   :uberjar-name "uberpi.jar"
   :hooks [leiningen.cljsbuild]
-  :profiles {:uberjar {:aot :all}}
+  :profiles {:dev {}
+             :uberjar {:aot :all}}
   :cljsbuild {:builds
               {:dev {:source-paths ["src-cljs/pi/"]
                      :compiler {:output-to "resources/public/js/main.js"
@@ -58,7 +59,6 @@
                           :pretty-print false
                           :output-wrapper false
                           :preamble ["react/react.min.js"]
-                                     ;"resources/public/js/externs/moment.min.js"]
                           :externs ["react/externs/react.js"
                                     "resources/public/js/externs/moment.min.js"]
                           :foreign-libs [{:file "http://momentjs.com/downloads/moment.min.js"
