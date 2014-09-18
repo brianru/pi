@@ -42,26 +42,25 @@
   :hooks [leiningen.cljsbuild]
   :profiles {:uberjar {:aot :all}}
   :cljsbuild {:builds
-               [{:id "dev"
-                 :source-paths ["src-cljs/pi/"]
-                 :compiler {:output-to "resources/public/js/main.js"
-                            :output-dir "resources/public/js/out"
-                            :optimizations :none
-                            :pretty-print true
-                            :source-map true}}
-                {:id "uberjar"
-                 :source-paths ["src-cljs/pi/"]
-                 :jar true
-                 :compiler
-                   {:output-to "resources/public/js/main.js"
-                    ;:output-dir "resources/public/js/out"
-                    :optimizations :advanced
-                    :elide-asserts true
-                    :pretty-print false
-                    :output-wrapper false
-                    :source-map false
-                    ;:preamble ["react/react.min.js"]
-                    ;:externs ["react/externs/react.js"]
-                    :closure-warnings {:externs-validation :off
-                                       :non-standard-jsdoc :off}}}]}
-  )
+              {:dev {:source-paths ["src-cljs/pi/"]
+                     :compiler {:output-to "resources/public/js/main.js"
+                                :output-dir "resources/public/js/out"
+                                :optimizations :none
+                                :pretty-print true
+                                :source-map true}}
+               :uberjar {
+                         :source-paths ["src-cljs/pi/"]
+                         :jar true
+                         :compiler
+                         {:output-to "resources/public/js/main.js"
+                          ;:output-dir "resources/public/js/out"
+                          :optimizations :advanced
+                          :elide-asserts true
+                          :pretty-print false
+                          :output-wrapper false
+                          :source-map false
+                          ;:preamble ["react/react.min.js"]
+                          ;:externs ["react/externs/react.js"]
+                          :closure-warnings {:externs-validation :off
+                                             :non-standard-jsdoc :off}}}}}
+              )
