@@ -25,7 +25,7 @@
                      (om/transact! app :username (fn [_] username))
                      (s/chsk-reconnect! chsk)
                      )
-                   (println "failed to register:" ajax-resp))))))
+                   (println "failed to register:" ajax-resp)))))
 
 (defn register-submit [keyval app owner]
   (when (= keyval "Enter")
@@ -47,13 +47,12 @@
                             :className "form-control"
                             :autoFocus true
                             :onKeyDown #(register-submit (.-key %)
-                                                          app owner)
-                            )
+                                                          app owner)})
             (dom/input #js {:type "text"
                             :ref "reg-username"
                             :className "form-control"
                             :onKeyDown #(register-submit (.-key %)
-                                                          app owner))))
+                                                          app owner)})))
         (dom/div #js {:className "form-group"}
           (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
             (dom/button #js {:type "button"
@@ -106,7 +105,7 @@
                      (om/transact! app :username (fn [_] username))
                      (s/chsk-reconnect! chsk)
                      )
-                   (println "failed to login:" ajax-resp))))))
+                   (println "failed to login:" ajax-resp)))))
 
 (defn login-submit [keyval app owner]
   (when (= keyval "Enter")
@@ -143,7 +142,7 @@
                              :className "btn btn-primary"
                              :onTouch #(login-submit "Enter" app owner)
                              :onClick #(login-submit "Enter" app owner)}
-                        "Submit")))))))
+                        "Submit"))))))))
 
 (defn gateway-view [app owner]
   (reify

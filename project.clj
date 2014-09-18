@@ -37,11 +37,11 @@
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-marginalia "0.8.0"]]
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
-  :hooks [leiningen.cljsbuild]
   :profiles {:dev {}
              :uberjar {:aot :all
                        :jar-name "pi.jar"
                        :uberjar-name "uberpi.jar"
+                       :hooks [leiningen.cljsbuild]
                        }}
   :cljsbuild {:builds
               {:dev {:source-paths ["src-cljs/pi/"]
@@ -49,6 +49,8 @@
                                 :output-dir "resources/public/js/out"
                                 :optimizations :none
                                 :pretty-print true
+                                :foreign-libs [{:file "resources/public/js/externs/moment.min.js"
+                                                :provides ["pi.moment"]}]
                                 :source-map true}}
                :uberjar {
                          :source-paths ["src-cljs/pi/"]
