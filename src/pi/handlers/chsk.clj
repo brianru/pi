@@ -5,41 +5,10 @@
             [taoensso.sente :as s]
             [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
+            [pi.models.core :refer [all-msgs all-users next-id
+                                    connected-users]]
             [pi.util :as util]
             ))
-
-(defn- now [] (quot (System/currentTimeMillis) 1000))
-
-(let [max-id (atom 0)]
-  (defn next-id []
-    (swap! max-id inc)))
-
-(defn radius [_]
-  ;; calculate distance of every msg in the last hour
-  ;; 
-  30.0)
-
-(defn in-radius? [loc1 loc2]
-  (if (and (util/coordinate? loc1)
-           (util/coordinate? loc2))
-    (< (util/distance loc1 loc2) (radius loc1))
-    false))
-
-(defn local-messages [user loc msgs]
-  (->> msgs
-      (filter #(in-radius? loc (:location %)))
-      (sort-by :id >)))
-
-(defonce all-msgs (ref [{:id (next-id)
-                         :time (now)
-                         :msg "woah! I can talk!"
-                         :author "dr. seuss"
-                         :location {:latitude 90 :longitude 0}}]))
-
-(defonce all-users (ref [{:uid nil
-                          :password nil
-                          :location nil
-                          }]))
 
 (let [{:keys [ch-recv
               send-fn
@@ -52,18 +21,6 @@
   (def ch-chsk          ch-recv)
   (def chsk-send!       send-fn)
   (def connected-uids   connected-uids))
-
-(defn connected-users
-  "Get them all, or, only those within the radius of a given location."
-  ([]
-   (dosync
-     (filter #(contains? (:any @connected-uids) (:uid %))
-             @all-users)))
-  ([{:keys [latitude longitude] :as loc}]
-   (dosync
-     (filter (comp #(contains? (:any @connected-uids) (:uid %))
-                   #(in-radius? (:location %) loc))
-             @all-users))))
 
 (defmulti event-msg-handler :id)
 (defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
@@ -95,7 +52,7 @@
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
   (let [{:keys [msg author location] :as post} (last event)]
     (when msg
-      (let [data (merge post {:time (now) :id (next-id)})]
+      (let [data (merge post {:time (util/now) :id (next-id)})]
         (dosync
          (ref-set all-msgs (conj @all-msgs data)))
         ;; TODO only send to uids who are in range of the new msg

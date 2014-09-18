@@ -17,3 +17,5 @@
 (defn coordinate? [{:keys [latitude longitude]}]
   (and (geo/latitude? latitude)
        (geo/longitude? longitude)))
+
+(defn now [] (quot (System/currentTimeMillis) 1000))
