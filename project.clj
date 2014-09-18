@@ -61,8 +61,8 @@
                                      ;"resources/public/js/externs/moment.min.js"]
                           :externs ["react/externs/react.js"
                                     "resources/public/js/externs/moment.min.js"]
-                          ;:foreign-libs [{:file "http://momentjs.com/downloads/moment.min.js"
-                          ;                :provides ["pi.moment"]}]
+                          :foreign-libs [{:file "http://momentjs.com/downloads/moment.min.js"
+                                          :provides ["pi.moment"]}]
                           :closure-warnings {:externs-validation :off
                                              :non-standard-jsdoc :off}}}}}
               )
