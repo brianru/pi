@@ -58,7 +58,6 @@
                           :elide-asserts true
                           :pretty-print false
                           :output-wrapper false
-                          :source-map false
                           ;:preamble ["react/react.min.js"]
                           ;:externs ["react/externs/react.js"]
                           :closure-warnings {:externs-validation :off
