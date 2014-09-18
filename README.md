@@ -1,3 +1,5 @@
+**NOTE everything is changing all the time. there are no quality guarantees.**
+
 # [Project Pi (real name tbd)](https://project-pi.herokuapp.com)
 
 This is a hyper local, ephemeral information platform.
