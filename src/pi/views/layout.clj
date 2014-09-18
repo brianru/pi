@@ -36,4 +36,5 @@
     (head)
     [:body
      [:div#app-container
-      (include-js "js/main.js")]]))
+      (include-js "js/main.js"
+                  "js/externs/moment.min.js")]]))
