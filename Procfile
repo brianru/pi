@@ -1,1 +1,1 @@
-web: lein cljsbuild once && lein trampoline run
+web: lein cljsbuild once && lein with-profile production trampoline run
