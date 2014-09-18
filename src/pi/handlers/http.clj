@@ -2,6 +2,7 @@
   (:require [org.httpkit.server           :as kit]
             [ring.middleware.defaults     :refer :all]
             [ring.middleware.anti-forgery :as ring-anti-forgery]
+            [crypto.password.scrypt       :as pw]
             [environ.core                 :refer [env]]
             (compojure [core              :refer [defroutes GET POST]]
                        [route             :as route])
@@ -11,20 +12,28 @@
 
 (defn register! [ring-request]
   (let [{:keys [session params]} ring-request
-        {:keys [user-id password]} params]
-    (dosync
-      (alter all-users
-             assoc @all-users user-id
-                   {:uid user-id :password password :location nil})
-      {:status 200 :session (assoc session :uid user-id)})))
+        {:keys [user-id password]} params
+        hash-pass (pw/encrypt password)]
+    (if (get @all-users user-id)
+      {:status 401}
+      (dosync
+        (ref-set all-users
+                 (assoc @all-users user-id
+                        {:uid user-id
+                         :password hash-pass
+                         :location {:latitude nil
+                                    :longitude nil}}))
+        {:status 200 :session (assoc session :uid user-id)}))))
 
 (defn login! [ring-request]
   (let [{:keys [session params]} ring-request
         {:keys [user-id password]} params]
     (dosync
-      (println @all-users)
-      ;; TODO check to make sure username and password match up
-      {:status 200 :session (assoc session :uid user-id)})))
+      (let [user (get @all-users user-id)
+            good (if user (pw/check password (:password user)) false)]
+        (if good
+          {:status 200 :session (assoc session :uid user-id)}
+          {:status 401})))))
 
 (defn logout! [ring-request]
   (let [{:keys [session params]} ring-request

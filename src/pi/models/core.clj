@@ -11,12 +11,12 @@
                          :author "dr. seuss"
                          :location {:latitude 90 :longitude 0}}]))
 
-(defonce all-users (ref {"apple" {:uid "apple"
-                                  :password nil
-                                  :salt nil
-                                  :location nil
-                                  }
-                         }))
+(defonce all-users (ref {}))
+                        ;{"apple" {:uid "apple"
+                        ;          :password nil
+                        ;          :location nil
+                        ;          }
+                         
 
 (defn radius [_]
   ;; calculate distance of every msg in the last hour

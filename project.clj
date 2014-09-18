@@ -11,7 +11,7 @@
                  [environ "1.0.0"]
                  [com.taoensso/encore "1.9.1"]
                  [com.taoensso/tower "3.0.1"] ;; TODO
-                 [com.cemerick/friend "0.2.1"]
+                 [crypto-password "0.1.3"]
 
                  ;; Web communications
                  [ring/ring-core "1.3.1"]

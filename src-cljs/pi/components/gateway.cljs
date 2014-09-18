@@ -47,19 +47,24 @@
                             :className "form-control"
                             :autoFocus true
                             :onKeyDown #(register-submit (.-key %)
-                                                          app owner)})
-            (dom/input #js {:type "text"
-                            :ref "reg-username"
+                                                          app owner)
+                            :placeholder "Username"})))
+        (dom/div #js {:className "form-group"}
+          (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
+            (dom/input #js {:type "password"
+                            :ref "reg-password"
                             :className "form-control"
                             :onKeyDown #(register-submit (.-key %)
-                                                          app owner)})))
+                                                          app owner)
+                            :placeholder "Password"})))
         (dom/div #js {:className "form-group"}
           (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
             (dom/button #js {:type "button"
                              :className "btn btn-primary"
-                             :onTouch #(register-submit "Enter" app owner)
-                             :onClick #(register-submit "Enter" app owner)
-                             }
+                             :onTouch #(register-submit "Enter"
+                                                        app owner)
+                             :onClick #(register-submit "Enter"
+                                                        app owner)}
                             "Register")))))))
 
 (defn logout [app owner]
@@ -129,20 +134,25 @@
                             :value (:username state)
                             :onKeyDown #(login-submit (.-key %)
                                                        app owner)
-                            :placeholder "Username"})
+                            :placeholder "Username"})))
+        (dom/div #js {:className "form-group"}
+          (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
             (dom/input #js {:type "password"
                             :ref "login-password"
                             :className "form-control"
                             :onKeyDown #(login-submit (.-key %)
-                                                       app owner)}
-                            ))
+                                                       app owner)
+                            :placeholder "Password"}
+                            )))
         (dom/div #js {:className "form-group"}
           (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
             (dom/button #js {:type "button"
                              :className "btn btn-primary"
-                             :onTouch #(login-submit "Enter" app owner)
-                             :onClick #(login-submit "Enter" app owner)}
-                        "Submit"))))))))
+                             :onTouch #(login-submit "Enter"
+                                                     app owner)
+                             :onClick #(login-submit "Enter"
+                                                     app owner)}
+                        "Submit")))))))
 
 (defn gateway-view [app owner]
   (reify
@@ -153,4 +163,6 @@
         (dom/div #js {:className "container login"}
           (if-not (blank? (get app :username))
             (om/build logout-view app)
-            (om/build login-view app)))))))
+            (dom/div nil
+                    (om/build login-view app)
+                    (om/build register-view app))))))))
