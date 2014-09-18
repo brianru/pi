@@ -49,7 +49,7 @@
                             :optimizations :none
                             :pretty-print true
                             :source-map true}}
-                {:id "production"
+                {:id "uberjar"
                  :source-paths ["src-cljs/pi/"]
                  :jar true
                  :compiler
@@ -59,6 +59,7 @@
                     :elide-asserts true
                     :pretty-print false
                     :output-wrapper false
+                    :source-map false
                     ;:preamble ["react/react.min.js"]
                     ;:externs ["react/externs/react.js"]
                     :closure-warnings {:externs-validation :off
