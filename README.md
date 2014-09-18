@@ -1,4 +1,4 @@
-# Project Pi (real name tbd)
+# [Project Pi (real name tbd)](https://project-pi.herokuapp.com)
 
 This is a hyper local, ephemeral information platform.
 
