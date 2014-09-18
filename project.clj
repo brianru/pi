@@ -37,6 +37,10 @@
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-marginalia "0.8.0"]]
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
+  :jar-name "pi.jar"
+  :uberjar-name "uberpi.jar"
+  :hooks [leiningen.cljsbuild]
+  :profiles {:uberjar {:aot :all}}
   :cljsbuild {:builds
                [{:id "dev"
                  :source-paths ["src-cljs/pi/"]
@@ -47,6 +51,7 @@
                             :source-map true}}
                 {:id "production"
                  :source-paths ["src-cljs/pi/"]
+                 :jar true
                  :compiler
                    {:output-to "resources/public/js/main.js"
                     ;:output-dir "resources/public/js/out"

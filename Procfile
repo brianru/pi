@@ -1,1 +1,1 @@
-web: LEIN_BUILD_TASK=compile :all lein cljsbuild once production && lein with-profile production trampoline run
+web: java $JVM_OPTS -cp target/uberpi.jar clojure.main -m pi.main
