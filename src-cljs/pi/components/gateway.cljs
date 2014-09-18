@@ -12,25 +12,56 @@
             [pi.handlers.chsk :refer [chsk chsk-state]]
             [pi.components.nav :refer [navbar]]))
 
-(defn register [app owner]
-  nil)
+(defn register [app username password]
+  (s/ajax-call "/register"
+               {:method :post
+                :params {:user-id username
+                         :password password
+                         :csrf-token (:csrf-token @chsk-state)}}
+               (fn [{:keys [?status] :as ajax-resp}]
+                 (if (= ?status 200)
+                   (do
+                     (secretary/dispatch! "/local")
+                     (om/transact! app :username (fn [_] username))
+                     (s/chsk-reconnect! chsk)
+                     )
+                   (println "failed to register:" ajax-resp))))))
 
-(defn login [app owner]
-  (let [username (-> (om/get-node owner "login-username") .-value)]
-    (s/ajax-call "/login"
-      {:method :post
-       :params {:user-id username
-                :csrf-token (:csrf-token @chsk-state)}}
-      ;; handle response callback
-      (fn [{:keys [?status] :as ajax-resp}]
-        (if (= ?status 200)
-          (do
-            (secretary/dispatch! "/local")
-            ;(set! (.-hash js/window.location) "/local")
-            (om/transact! app :username (fn [_] username))
-            (s/chsk-reconnect! chsk)
-            )
-          (println "failed to login:" ajax-resp))))))
+(defn register-submit [keyval app owner]
+  (when (= keyval "Enter")
+    (let [username (-> (om/get-node owner "reg-username") .-value)
+          password (-> (om/get-node owner "reg-password") .-value)]
+      (if (and username password) ;; TODO better validation. hash here?
+        (register app username password))
+      nil)))
+
+(defn register-view [app owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (dom/div nil 
+        (dom/div #js {:className "form-group"}
+          (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
+            (dom/input #js {:type "text"
+                            :ref "reg-username"
+                            :className "form-control"
+                            :autoFocus true
+                            :onKeyDown #(register-submit (.-key %)
+                                                          app owner)
+                            )
+            (dom/input #js {:type "text"
+                            :ref "reg-username"
+                            :className "form-control"
+                            :onKeyDown #(register-submit (.-key %)
+                                                          app owner))))
+        (dom/div #js {:className "form-group"}
+          (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
+            (dom/button #js {:type "button"
+                             :className "btn btn-primary"
+                             :onTouch #(register-submit "Enter" app owner)
+                             :onClick #(register-submit "Enter" app owner)
+                             }
+                            "Register")))))))
 
 (defn logout [app owner]
   (let [{:keys [uid csrf-token]} @chsk-state]
@@ -61,6 +92,30 @@
                                 :onClick #(logout app owner)}
                            "Logout")))))
 
+(defn login [app username password]
+  (s/ajax-call "/login"
+               {:method :post
+                :params {:user-id username
+                         :password password
+                         :csrf-token (:csrf-token @chsk-state)}}
+               (fn [{:keys [?status] :as ajax-resp}]
+                 (if (= ?status 200)
+                   (do
+                     (secretary/dispatch! "/local")
+                     ;(set! (.-hash js/window.location) "/local")
+                     (om/transact! app :username (fn [_] username))
+                     (s/chsk-reconnect! chsk)
+                     )
+                   (println "failed to login:" ajax-resp))))))
+
+(defn login-submit [keyval app owner]
+  (when (= keyval "Enter")
+    (let [username (-> (om/get-node owner "login-username") .-value)
+          password (-> (om/get-node owner "login-password") .-value)]
+      (if (and username password) ;; TODO do better validation
+        (login app username password)
+        nil))))
+
 (defn login-view [app owner]
   (reify
     om/IRenderState
@@ -73,15 +128,21 @@
                             :className "form-control"
                             :autoFocus true
                             :value (:username state)
-                            :onKeyDown #(when (= (.-key %) "Enter")
-                                          (login app owner))
-                            :placeholder "Username"})))
+                            :onKeyDown #(login-submit (.-key %)
+                                                       app owner)
+                            :placeholder "Username"})
+            (dom/input #js {:type "password"
+                            :ref "login-password"
+                            :className "form-control"
+                            :onKeyDown #(login-submit (.-key %)
+                                                       app owner)}
+                            ))
         (dom/div #js {:className "form-group"}
           (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
             (dom/button #js {:type "button"
                              :className "btn btn-primary"
-                             :onTouch #(login app owner)
-                             :onClick #(login app owner)}
+                             :onTouch #(login-submit "Enter" app owner)
+                             :onClick #(login-submit "Enter" app owner)}
                         "Submit")))))))
 
 (defn gateway-view [app owner]

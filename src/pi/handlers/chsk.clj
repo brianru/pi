@@ -5,8 +5,7 @@
             [taoensso.sente :as s]
             [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
-            [pi.models.core :refer [all-msgs all-users next-id
-                                    connected-users]]
+            [pi.models.core :refer [all-msgs all-users next-id local-messages]]
             [pi.util :as util]
             ))
 
@@ -21,6 +20,13 @@
   (def ch-chsk          ch-recv)
   (def chsk-send!       send-fn)
   (def connected-uids   connected-uids))
+
+(defn connected-users
+  "Get them all, or, only those within the radius of a given location."
+  ([]
+   (dosync
+     (filter #(contains? (:any @connected-uids) (:uid %))
+             @all-users))))
 
 (defmulti event-msg-handler :id)
 (defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]

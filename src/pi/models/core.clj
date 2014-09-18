@@ -6,15 +6,17 @@
     (swap! max-id inc)))
 
 (defonce all-msgs (ref [{:id (next-id)
-                         :time (now)
+                         :time (util/now)
                          :msg "woah! I can talk!"
                          :author "dr. seuss"
                          :location {:latitude 90 :longitude 0}}]))
 
-(defonce all-users (ref [{:uid nil
-                          :password nil
-                          :location nil
-                          }]))
+(defonce all-users (ref {"apple" {:uid "apple"
+                                  :password nil
+                                  :salt nil
+                                  :location nil
+                                  }
+                         }))
 
 (defn radius [_]
   ;; calculate distance of every msg in the last hour
@@ -31,16 +33,8 @@
   (->> msgs
       (filter #(in-radius? loc (:location %)))
       (sort-by :id >)))
-
-(defn connected-users
-  "Get them all, or, only those within the radius of a given location."
-  ([]
-   (dosync
-     (filter #(contains? (:any @connected-uids) (:uid %))
-             @all-users)))
-  ([{:keys [latitude longitude] :as loc}]
-   (dosync
-     (filter (comp #(contains? (:any @connected-uids) (:uid %))
-                   #(in-radius? (:location %) loc))
-             @all-users))))
-
+  ;([{:keys [latitude longitude] :as loc}]
+  ; (dosync
+  ;   (filter (comp #(contains? (:any @connected-uids) (:uid %))
+  ;                 #(in-radius? (:location %) loc))
+  ;           @all-users))))
