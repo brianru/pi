@@ -1,1 +1,1 @@
-web: lein cljsbuild once && lein with-profile dev trampoline run
+web: LEIN_BUILD_TASK=compile :all lein cljsbuild once production && lein with-profile production trampoline run
