@@ -59,6 +59,8 @@
                           :output-wrapper false
                           :preamble ["react/react.min.js"]
                           :externs ["react/externs/react.js"]
+                          :foreign-libs [{:file "http://momentjs.com/downloads/moment.min.js"
+                                          :provides ["pi.moment"]}]
                           :closure-warnings {:externs-validation :off
                                              :non-standard-jsdoc :off}}}}}
               )

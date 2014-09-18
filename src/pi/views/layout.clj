@@ -36,5 +36,4 @@
     (head)
     [:body
      [:div#app-container
-      (include-js "js/main.js"
-                  "//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min.js")]]))
+      (include-js "js/main.js")]]))
