@@ -9,6 +9,7 @@
             [pi.handlers.chsk :refer [ring-ajax-get-ws ring-ajax-post]]
   ))
 
+
 (defn login! [ring-request]
   (let [{:keys [session params]} ring-request
         {:keys [user-id]} params]
@@ -22,7 +23,9 @@
      :session (assoc session :uid "")}))
 
 (defroutes routes
-  (GET  "/"        req (layout/app))
+  (GET  "/"        req (if (env :port)
+                         (layout/prod-app)
+                         (layout/test-app)))
   (POST "/login"   req (login! req))
   (POST "/logout"  req (logout! req))
 

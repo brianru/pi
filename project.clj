@@ -53,13 +53,12 @@
                          :jar true
                          :compiler
                          {:output-to "resources/public/js/main.js"
-                          ;:output-dir "resources/public/js/out"
                           :optimizations :advanced
                           :elide-asserts true
                           :pretty-print false
                           :output-wrapper false
-                          ;:preamble ["react/react.min.js"]
-                          ;:externs ["react/externs/react.js"]
+                          :preamble ["react/react.min.js"]
+                          :externs ["react/externs/react.js"]
                           :closure-warnings {:externs-validation :off
                                              :non-standard-jsdoc :off}}}}}
               )

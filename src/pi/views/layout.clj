@@ -20,7 +20,7 @@
     (head)
     [:body body]))
 
-(defn app []
+(defn test-app []
   (html5
     (head)
     [:body
@@ -30,3 +30,9 @@
                   "js/out/goog/base.js"
                   "js/main.js")
       [:script {:type "text/javascript"} "goog.require(\"pi.main\");"]]]))
+
+(defn prod-app []
+  (html5
+    (head)
+    [:body
+     [:div#app-container (include-js "js/main.js")]]))
