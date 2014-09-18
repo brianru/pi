@@ -13,13 +13,32 @@
   (defn next-id []
     (swap! max-id inc)))
 
-; TODO what's a ref?
-; TODO why defonce?
+(defn radius [_]
+  ;; calculate distance of every msg in the last hour
+  ;; 
+  30.0)
+
+(defn in-radius? [loc1 loc2]
+  (if (and (util/coordinate? loc1)
+           (util/coordinate? loc2))
+    (< (util/distance loc1 loc2) (radius loc1))
+    false))
+
+(defn local-messages [user loc msgs]
+  (->> msgs
+      (filter #(in-radius? loc (:location %)))
+      (sort-by :id >)))
+
 (defonce all-msgs (ref [{:id (next-id)
                          :time (now)
                          :msg "woah! I can talk!"
                          :author "dr. seuss"
                          :location {:latitude 90 :longitude 0}}]))
+
+(defonce all-users (ref [{:uid
+                          :password
+                          :location
+                          }]))
 
 (let [{:keys [ch-recv
               send-fn
@@ -32,6 +51,18 @@
   (def ch-chsk          ch-recv)
   (def chsk-send!       send-fn)
   (def connected-uids   connected-uids))
+
+(defn connected-users
+  "Get them all, or, only those within the radius of a given location."
+  ([]
+   (dosync
+     (filter #(contains? (:any @connected-uids) (:uid %))
+             @all-users)))
+  ([{:keys [latitude longitude] :as loc}]
+   (dosync
+     (filter (comp #(contains? (:any @connected-uids) (:uid %))
+                   #(in-radius? (:location %) loc))
+             @all-users))))
 
 (defmulti event-msg-handler :id)
 (defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
@@ -49,23 +80,13 @@
 (defmethod event-msg-handler :chsk/uidport-close [ev-msg] nil)
 (defmethod event-msg-handler :chsk/ws-ping [ev-msg] nil)
 
-(defn radius [_]
-  ;; calculate distance of every msg in the last hour
-  ;; 
-  30.0)
-
-(defn in-radius? [user loc msg]
-  (if (and (util/coordinate? (:location msg))
-           (util/coordinate? loc))
-    (< (util/distance loc (:location msg)) (radius loc))
-    false))
 
 (defmethod event-msg-handler :update/location
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
   (let [uid (-> ring-req :session :uid)]
     (if-not (or (nil? uid) (blank? uid))
       (let [{:keys [username location]} (last event)
-            msgs (filter #(in-radius? username location %) @all-msgs)]
+            msgs (local-messages username location @all-msgs)]
         (println "msg count:" (count msgs) "/" (count @all-msgs))
         (chsk-send! uid [:swap/posts msgs])))))
 
@@ -76,6 +97,7 @@
       (let [data (merge post {:time (now) :id (next-id)})]
         (dosync
          (ref-set all-msgs (conj @all-msgs data)))
+        ;; TODO only send to uids who are in range of the new msg
         (doseq [uid (:any @connected-uids)]
           (chsk-send! uid [:new/post data]))))))
 

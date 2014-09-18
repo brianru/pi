@@ -48,7 +48,7 @@
 
 (defn start-server! []
   (stop-server!)
-  (let [port (read-string (or (env :port) "9899"))
+  (let [port (Integer. (or (env :port) "9899"))
         s    (kit/run-server (var my-ring-handler) {:port port})]
     (reset! server_ s)
     (println "Http-kit server is running on port" port)))
