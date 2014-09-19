@@ -6,12 +6,8 @@
             ))
 
 (defn distance
-  "TODO I don't know if these numbers are correct.
-   What's the 4326 all about?
-   TODO make sure both locs come in as clojure maps (or parse em)"
+  "I do not fully understand what the '4326' is all about."
   [loc1 loc2]
- ;; TODO make sure coordinates are valid using geo helper fn
-  ;{:pre [(and msg-log my-loc)]}
   (let [pt1 (geo/point 4326 (:latitude loc1) (:longitude loc1))
         pt2 (geo/point 4326 (:latitude loc2) (:longitude loc2))
         dist (geo/distance-to pt1 pt2)]
@@ -20,7 +16,7 @@
 (defn format-km [x]
   (cond
     (nil? x) x
-    :else (str (gstring/padNumber x 1, 2) "km")))
+    :else (str (gstring/padNumber x 1 2) "km")))
 
 (defn format-timestamp [t]
   (println t)

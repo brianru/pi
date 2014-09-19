@@ -32,29 +32,35 @@
       (om/set-state! owner :post "")
       )))
 
+(defn meta-enter? [k]
+  (and (.-metaKey k) (= (.-key k) "Enter")))
+
 (defn new-post [app owner]
   (reify
     om/IInitState
     (init-state [_]
       {:post ""})
-
     om/IRenderState
     (render-state [this {:keys [post] :as state}]
       (let [username (get app :username)
-            has-access (-> username blank? not)]
+            has-access (-> username blank? not)
+            has-location (-> (get app :location) :latitude)
+            ready (and has-access has-location)]
         (dom/div #js {:className "new-post"}
           (dom/textarea #js {:ref "new-post"
                              :className "form-control"
                              :placeholder "What's happening?"
-                             :disabled (not has-access)
+                             :disabled (not ready)
                              :rows "3"
                              :value post
+                             :onKeyDown #(if (meta-enter? %)
+                                           (submit-post app owner))
                              :onChange #(handle-change % owner)})
           (dom/div #js {:className "row"}
             (dom/div #js {:className "pull-left"} (count post))
             (dom/div #js {:className "pull-right"}
               (dom/button #js {:type "button"
-                               :disabled (or (not has-access)
+                               :disabled (or (not ready)
                                              (blank? post))
                                :className "btn btn-primary"
                                :onTouch #(submit-post app owner)
