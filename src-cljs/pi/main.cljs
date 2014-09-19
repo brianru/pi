@@ -22,7 +22,7 @@
 (def app-container (. js/document (getElementById "app-container")))
 
 (defn render-page [component state target]
-  (om/root component state {:target target }))
+  (om/root component state {:target target}))
                           ;  :instrument (fn [f cursor m]
                           ;                (om/build* nav-instrument
                           ;                           [f cursor m]))}))

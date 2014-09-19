@@ -36,6 +36,9 @@
             :active false
             :side :left
             :restricted true}]
+     ;; {:name "Somethin to do"
+     ;;  :path "Where to do it"}
+     :notifications []
      :max-id 0
      :initialized false
      :location {:latitude nil

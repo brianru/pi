@@ -2,7 +2,6 @@
   (:require [geo.core        :as geo]
             [taoensso.encore :refer [exp-backoff]]
             [goog.string :as gstring]
-            [cljs-time.core :as t]
             [pi.moment]
             ))
 

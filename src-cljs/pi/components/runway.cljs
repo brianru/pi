@@ -11,7 +11,7 @@
     om/IRenderState
     (render-state [this state]
       (dom/div #js {:className "jumbotron"}
-        (om/build navbar app state)
+        (om/build navbar app)
         (dom/div #js {:className "image-banner"}
           (dom/span nil "Photo of your part of the world, from space, taken at night."))
         (dom/div #js {:className "image-banner"}

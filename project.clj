@@ -30,7 +30,6 @@
                  [secretary "1.2.1"]
                  [sablono "0.2.22"] ;; TODO
                  [geo-clj "0.3.15"]
-                 [com.andrewmcveigh/cljs-time "0.1.6"]
                  ]
   :min-lein-version "2.3.3"
   :main pi.main

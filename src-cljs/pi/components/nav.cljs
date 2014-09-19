@@ -22,6 +22,31 @@
                          (= (:restricted itm) (-> username blank? not))))
           nav))
 
+(defn notification [data owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (dom/li nil
+        (dom/a #js {:href (get data :path)}
+          (get data :name))))))
+                   
+(defn notifications [data owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:open false})
+    om/IRenderState
+    (render-state [this {:keys [open] :as state}]
+      (dom/li #js {:className (str "dropdown" (if open " open"))}
+        (dom/a #js {:className  "dropdown-toggle"
+                    :onClick #(om/set-state! owner :open (not open)) 
+                    :onTouch #(om/set-state! owner :open (not open))}
+          (dom/span #js {:className "glyphicon glyphicon-flag"} nil))
+        (apply dom/ul #js {:className "dropdown-menu"
+                           :role "menu"}
+               (om/build-all notification
+                             (get data :notifications)))))))
+
 (defn navbar [app owner]
   (reify
     om/IRenderState
@@ -35,11 +60,11 @@
                         nil)))
           (dom/div nil
             (apply dom/ul #js {:className "nav navbar-nav"}
-        ;; FIXME not the right way to pass state to a component
               (om/build-all nav-item (nav-for app :left)
                             {:init-state {:username (:username app)}}))
+            ;; TODO add notifications in the center
             (apply dom/ul #js {:className "nav navbar-nav navbar-right"}
-        ;; FIXME not the right way to pass state to a component
+              (if (-> (:username app) blank? not) (om/build notifications app))
               (om/build-all nav-item (nav-for app :right)
                             {:init-state {:username (:username app)}}))
                  ))))))

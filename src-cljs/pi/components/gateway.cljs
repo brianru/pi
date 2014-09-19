@@ -9,6 +9,7 @@
                              :include-macros true]
             [secretary.core  :as secretary
                              :include-macros true]
+            [cljs.core.async :as async :refer [put! chan <! >!]]
             [pi.handlers.chsk :refer [chsk chsk-state]]
             [pi.components.nav :refer [navbar]]))
 
@@ -160,10 +161,10 @@
     om/IRenderState
     (render-state [this state]
       (dom/div #js {:className "jumbotron form-horizontal"}
-        (om/build navbar app state)
+        (om/build navbar app)
         (dom/div #js {:className "container login"}
           (if-not (blank? (get app :username))
-            (om/build logout-view app)
+            (om/build logout-view app )
             (dom/div nil
-                    (om/build login-view app)
-                    (om/build register-view app))))))))
+                    (om/build login-view app )
+                    (om/build register-view app ))))))))
