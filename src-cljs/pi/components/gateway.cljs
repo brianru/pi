@@ -22,8 +22,8 @@
                (fn [{:keys [?status ?error ?content] :as ajax-resp}]
                  (if (= ?status 200)
                    (do
-                     (secretary/dispatch! "/local")
                      (om/transact! app :username (fn [_] username))
+                     (secretary/dispatch! "/local")
                      (s/chsk-reconnect! chsk)
                   ;   (om/set-state! owner :status {:success true
                    ;                                :message "Enjoy your Pi!"}) 
@@ -116,8 +116,8 @@
                (fn [{:keys [?status ?error ?content] :as ajax-resp}]
                  (if (= ?status 200)
                    (do
-                     (secretary/dispatch! "/local")
                      (om/transact! app :username (fn [_] username))
+                     (secretary/dispatch! "/local")
                      (s/chsk-reconnect! chsk)
                     ; (om/set-state! owner :status
                     ;                {:success true

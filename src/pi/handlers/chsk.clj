@@ -5,7 +5,8 @@
             [taoensso.sente :as s]
             [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
-            [pi.models.core :refer [all-msgs all-users next-id local-messages]]
+            [pi.models.core :refer [all-msgs all-users
+                                    next-id local-messages local-users]]
             [pi.util :as util]
             ))
 
@@ -25,8 +26,7 @@
   "Get them all, or, only those within the radius of a given location."
   ([]
    (dosync
-     (filter #(contains? (:any @connected-uids) (:uid %))
-             @all-users))))
+     (map #(get @all-users %) (:any @connected-uids)))))
 
 (defmulti event-msg-handler :id)
 (defn     event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
@@ -44,15 +44,19 @@
 (defmethod event-msg-handler :chsk/uidport-close [ev-msg] nil)
 (defmethod event-msg-handler :chsk/ws-ping [ev-msg] nil)
 
-
 (defmethod event-msg-handler :update/location
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
   (let [uid (-> ring-req :session :uid)]
     (if-not (or (nil? uid) (blank? uid))
       (let [{:keys [username location]} (last event)
+            user (get @all-users username)
+            updated-user (assoc user :location location)
             msgs (local-messages username location @all-msgs)]
-        (println "msg count:" (count msgs) "/" (count @all-msgs))
-        (chsk-send! uid [:swap/posts msgs])))))
+        (dosync
+          (ref-set all-users (assoc @all-users username updated-user))
+          (println "msg count:" (count msgs) "/" (count @all-msgs))
+          (println @all-users)
+          (chsk-send! uid [:swap/posts msgs]))))))
 
 (defmethod event-msg-handler :submit/post
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
@@ -60,10 +64,13 @@
     (when msg
       (let [data (merge post {:time (util/now) :id (next-id)})]
         (dosync
-         (ref-set all-msgs (conj @all-msgs data)))
-        ;; TODO only send to uids who are in range of the new msg
-        (doseq [uid (:any @connected-uids)]
-          (chsk-send! uid [:new/post data]))))))
+          (ref-set all-msgs (conj @all-msgs data))
+          (println @all-msgs)
+          (println (connected-users))
+          (println (local-users (:location data) (connected-users)))
+          (doseq [{:keys [uid]} (local-users (:location data)
+                                             (connected-users))]
+            (chsk-send! uid [:new/post data])))))))
 
 (defonce    router_ (atom nil))
 (defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))

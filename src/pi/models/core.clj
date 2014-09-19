@@ -5,11 +5,12 @@
   (defn next-id []
     (swap! max-id inc)))
 
-(defonce all-msgs (ref [{:id (next-id)
-                         :time (util/now)
-                         :msg "woah! I can talk!"
-                         :author "dr. seuss"
-                         :location {:latitude 90 :longitude 0}}]))
+(defonce all-msgs (ref []))
+                       ;{:id (next-id)
+                       ; :time (util/now)
+                       ; :msg "woah! I can talk!"
+                       ; :author "dr. seuss"
+                       ; :location {:latitude 90 :longitude 0}}
 
 (defonce all-users (ref {}))
                         ;{"apple" {:uid "apple"
@@ -20,7 +21,7 @@
 
 (defn radius [_]
   ;; calculate distance of every msg in the last hour
-  ;; 
+  ;; FIXME
   30.0)
 
 (defn in-radius? [loc1 loc2]
@@ -33,8 +34,7 @@
   (->> msgs
       (filter #(in-radius? loc (:location %)))
       (sort-by :id >)))
-  ;([{:keys [latitude longitude] :as loc}]
-  ; (dosync
-  ;   (filter (comp #(contains? (:any @connected-uids) (:uid %))
-  ;                 #(in-radius? (:location %) loc))
-  ;           @all-users))))
+
+(defn local-users [loc users]
+  (->> users
+       (filter #(in-radius? loc (:location %)))))
