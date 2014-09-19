@@ -54,8 +54,6 @@
             msgs (local-messages username location @all-msgs)]
         (dosync
           (ref-set all-users (assoc @all-users username updated-user))
-          (println "msg count:" (count msgs) "/" (count @all-msgs))
-          (println @all-users)
           (chsk-send! uid [:swap/posts msgs]))))))
 
 (defmethod event-msg-handler :submit/post
@@ -65,9 +63,6 @@
       (let [data (merge post {:time (util/now) :id (next-id)})]
         (dosync
           (ref-set all-msgs (conj @all-msgs data))
-          (println @all-msgs)
-          (println (connected-users))
-          (println (local-users (:location data) (connected-users)))
           (doseq [{:keys [uid]} (local-users (:location data)
                                              (connected-users))]
             (chsk-send! uid [:new/post data])))))))
