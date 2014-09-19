@@ -93,7 +93,6 @@
       (dom/div #js {:className "container"}
         (om/build navbar (select-keys app [:username :nav]))
         (dom/h4 nil (util/display-location (:location app)))
-        ;; FIXME not the right way to pass state to a component
         (om/build new-post app
                   {:init-state
                    (select-keys app [:location :username])})

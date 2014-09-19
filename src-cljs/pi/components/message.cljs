@@ -8,13 +8,17 @@
 
 (defn message-view [message owner]
   (reify
+    om/IWillMount
+    (will-mount [_]
+      (js/setInterval #(om/refresh! owner) 60000))
+
     om/IRenderState
-    (render-state [this _]
+    (render-state [this state]
       (dom/div #js {:className "row message"}
         (dom/div #js {:className "row top-row"}
           (dom/div #js {:className "col-xs-8 col-md-8"}
                    (get message :msg))
-          (dom/div #js {:className "col-xs-4 col-md-4"}
+          (dom/div #js {:className "col-xs-4 col-md-4"} 
                    (util/from-now (get message :time))))
         (dom/div #js {:className "row bottom-row"}
           (dom/div #js {:className "col-xs-6 col-md-2"}
