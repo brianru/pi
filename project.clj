@@ -54,6 +54,7 @@
                                 :source-map true}}
                :uberjar {
                          :source-paths ["src-cljs/pi/"]
+                         :resource-paths ["resources/public/"]
                          :jar true
                          :compiler
                          {:output-to "resources/public/js/main.js"

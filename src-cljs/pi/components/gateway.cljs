@@ -12,13 +12,14 @@
             [pi.handlers.chsk :refer [chsk chsk-state]]
             [pi.components.nav :refer [navbar]]))
 
-(defn register [app username password]
+(defn register! [app username password]
   (s/ajax-call "/register"
                {:method :post
                 :params {:user-id username
                          :password password
                          :csrf-token (:csrf-token @chsk-state)}}
-               (fn [{:keys [?status] :as ajax-resp}]
+               (fn [{:keys [?status ?error ?content] :as ajax-resp}]
+                 (println ajax-resp)
                  (if (= ?status 200)
                    (do
                      (secretary/dispatch! "/local")
@@ -32,7 +33,7 @@
     (let [username (-> (om/get-node owner "reg-username") .-value)
           password (-> (om/get-node owner "reg-password") .-value)]
       (if (and username password) ;; TODO better validation. hash here?
-        (register app username password))
+        (register! app username password))
       nil)))
 
 (defn register-view [app owner]
@@ -96,17 +97,17 @@
                                 :onClick #(logout app owner)}
                            "Logout")))))
 
-(defn login [app username password]
+(defn login! [app username password]
   (s/ajax-call "/login"
                {:method :post
                 :params {:user-id username
                          :password password
                          :csrf-token (:csrf-token @chsk-state)}}
                (fn [{:keys [?status] :as ajax-resp}]
-                 (if (= ?status 200)
+                 (println ajax-resp)
+                 (if (== ?status 200)
                    (do
                      (secretary/dispatch! "/local")
-                     ;(set! (.-hash js/window.location) "/local")
                      (om/transact! app :username (fn [_] username))
                      (s/chsk-reconnect! chsk)
                      )
@@ -117,7 +118,7 @@
     (let [username (-> (om/get-node owner "login-username") .-value)
           password (-> (om/get-node owner "login-password") .-value)]
       (if (and username password) ;; TODO do better validation
-        (login app username password)
+        (login! app username password)
         nil))))
 
 (defn login-view [app owner]
