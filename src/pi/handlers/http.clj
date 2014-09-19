@@ -59,7 +59,7 @@
 (defn custom-get-token [req] (-> req :params :csrf-token))
 
 (def my-ring-handler
-  (let [defaults  (if (env :port) secure-site-defaults site-defaults)
+  (let [defaults  site-defaults
         defaults* (assoc-in defaults [:security :anti-forgery]
                            {:read-token custom-get-token})]
     (wrap-defaults routes defaults*)))
