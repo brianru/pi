@@ -63,9 +63,9 @@
       (let [data (merge post {:time (util/now) :id (next-id)})]
         (dosync
           (ref-set all-msgs (conj @all-msgs data))
-          (doseq [{:keys [uid]} (local-users (:location data)
+          (doseq [user (local-users (:location data)
                                              (connected-users))]
-            (chsk-send! uid [:new/post data])))))))
+            (chsk-send! (:uid user) [:new/post data])))))))
 
 (defonce    router_ (atom nil))
 (defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))

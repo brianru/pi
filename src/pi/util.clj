@@ -2,6 +2,7 @@
   (:require [geo.core :as geo]
             ))
 
+;; TODO memoize
 (defn distance
   "TODO I don't know if these numbers are correct.
    What's the 4326 all about?

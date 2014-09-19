@@ -10,13 +10,14 @@
                  [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
                  [environ "1.0.0"]
                  [com.taoensso/encore "1.9.1"]
-                 [com.taoensso/tower "3.0.1"] ;; TODO
+                 ;; TODO [com.taoensso/tower "3.0.1"]
                  [crypto-password "0.1.3"]
+                 [clj-time "0.8.0"]
 
                  ;; Web communications
                  [ring/ring-core "1.3.1"]
                  [ring/ring-defaults "0.1.1"]
-                 [javax.servlet/servlet-api "2.5"] ;dev only ?
+                 [javax.servlet/servlet-api "2.5"]
                  [http-kit "2.1.18"]
                  [com.taoensso/sente "1.1.0"]
                  [compojure "1.1.9"]
@@ -28,7 +29,8 @@
                  ;; Client application
                  [om "0.7.3"]
                  [secretary "1.2.1"]
-                 [sablono "0.2.22"] ;; TODO
+                 ;; TODO [sablono "0.2.22"]
+                 ;; TODO om-tools
                  [geo-clj "0.3.15"]
                  ]
   :min-lein-version "2.3.3"

@@ -22,7 +22,8 @@
                         {:uid user-id
                          :password hash-pass
                          :location {:latitude nil
-                                    :longitude nil}}))
+                                    :longitude nil}
+                         :radius nil}))
         {:status 200 :session (assoc session :uid user-id)}))))
 
 (defn login! [ring-request]

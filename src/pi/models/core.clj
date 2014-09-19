@@ -1,5 +1,7 @@
 (ns pi.models.core
-  (:require [pi.util :as util]))
+  (:require [pi.util :as util]
+            [clj-time.coerce :as t-coerce]
+            [clj-time.core :as t]))
 
 (let [max-id (atom 0)]
   (defn next-id []
@@ -19,22 +21,58 @@
                         ;          }
                          
 
-(defn radius [_]
-  ;; calculate distance of every msg in the last hour
-  ;; FIXME
-  30.0)
+(defn calc-radius
+  "What matters is not just the number of messages within a radius,
+  but also, their timeliness.
+  
+  Therefore, we start by restricting our work to recent messages.
+  
+  You could imagine a graph where x is the radius, y is the # of
+  messages per hour in that last d, and there is a separate line for
+  every value of d.
 
-(defn in-radius? [loc1 loc2]
-  (if (and (util/coordinate? loc1)
-           (util/coordinate? loc2))
-    (< (util/distance loc1 loc2) (radius loc1))
-    false))
+  Each line is always increasing, but each line is also very different.
+  Some days are slower than others.
+  
+  For this reason the choice of d, in this case fixed to a single value,
+  has a great impact on the quality of the result.
+  
+  TODO parametrize on choice of d, with the ability to recur on larger
+  or smaller values if the result is not satisfactory."
+  ([loc]
+   (calc-radius loc 3))
+  ([loc d]
+   (dosync
+     (let [recent (filter #(->> %
+                                :time
+                                t-coerce/from-long
+                                (t/after? (-> d t/days t/ago)))
+                          @all-msgs)]
+       (if (and (>= 50 (count @all-msgs))
+                (<  50 (count recent)))
+         (calc-radius loc (* d 2))
+         (let [calc-distance #(assoc % :distance
+                                 (util/distance loc (:location %)))
+               calcd  (map calc-distance recent)
+               sorted (sort-by :distance calcd)
+               max-msg (first (max-key :distance sorted))]
+           (:distance max-msg)))))))
+
+(defn in-radius? 
+  ([loc1 loc2]
+   (if (and (util/coordinate? loc1) (util/coordinate? loc2))
+     (in-radius? (calc-radius loc1) loc1 loc2)))
+  ([radius loc1 loc2]
+   (println "in-radius? " radius)
+   (if (and (util/coordinate? loc1) (util/coordinate? loc2))
+     (<= (util/distance loc1 loc2) radius))))
 
 (defn local-messages [user loc msgs]
-  (->> msgs
-      (filter #(in-radius? loc (:location %)))
-      (sort-by :id >)))
+  (let [radius (calc-radius loc)]
+    (->> msgs
+         (filter #(in-radius? radius loc (:location %)))
+         (sort-by :id >))))
 
 (defn local-users [loc users]
-  (->> users
-       (filter #(in-radius? loc (:location %)))))
+  (let [radius (calc-radius loc)]
+    (filter #(in-radius? radius loc (:location %)) users)))
