@@ -11,6 +11,12 @@ body {
 textarea {
     resize: none;
 }
+.success-text {
+    color: green;
+}
+.failure-text {
+    color: red;
+}
 .hide {
     display: none;
 }

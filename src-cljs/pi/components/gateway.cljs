@@ -13,34 +13,39 @@
             [pi.handlers.chsk :refer [chsk chsk-state]]
             [pi.components.nav :refer [navbar]]))
 
-(defn register! [app username password]
+(defn register! [app owner username password]
   (s/ajax-call "/register"
                {:method :post
                 :params {:user-id username
                          :password password
                          :csrf-token (:csrf-token @chsk-state)}}
                (fn [{:keys [?status ?error ?content] :as ajax-resp}]
-                 (println ajax-resp)
                  (if (= ?status 200)
                    (do
                      (secretary/dispatch! "/local")
                      (om/transact! app :username (fn [_] username))
                      (s/chsk-reconnect! chsk)
+                  ;   (om/set-state! owner :status {:success true
+                   ;                                :message "Enjoy your Pi!"}) 
                      )
-                   (println "failed to register:" ajax-resp)))))
+                   (om/set-state! owner :status {:success false
+                                                 :message "Something went wrong. Please double check your username and password, then try again."})))))
 
 (defn register-submit [keyval app owner]
   (when (= keyval "Enter")
     (let [username (-> (om/get-node owner "reg-username") .-value)
           password (-> (om/get-node owner "reg-password") .-value)]
       (if (and username password) ;; TODO better validation. hash here?
-        (register! app username password))
-      nil)))
+        (register! app owner username password)
+        nil))))
 
 (defn register-view [app owner]
   (reify
+    om/IInitState
+    (init-state [_]
+      {:status nil})
     om/IRenderState
-    (render-state [this state]
+    (render-state [this {:keys [status] :as state}]
       (dom/div nil 
         (dom/div #js {:className "form-group"}
           (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
@@ -60,14 +65,19 @@
                                                           app owner)
                             :placeholder "Password"})))
         (dom/div #js {:className "form-group"}
-          (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
+          (dom/div #js {:className "col-xs-offset-3 col-xs-2"}
             (dom/button #js {:type "button"
                              :className "btn btn-primary"
                              :onTouch #(register-submit "Enter"
                                                         app owner)
                              :onClick #(register-submit "Enter"
                                                         app owner)}
-                            "Register")))))))
+                            "Register"))
+          (if-let [{:keys [success message]} status]
+            (dom/div #js {:className (str "col-xs-4" (if success
+                                                       " success-text"
+                                                       " failure-text"))}
+               (dom/span nil message))))))))
 
 (defn logout [app owner]
   (let [{:keys [uid csrf-token]} @chsk-state]
@@ -80,7 +90,6 @@
           (do
             (om/transact! app :username (fn [_] ""))
             (secretary/dispatch! "/")
-            ;(set! (.-hash js/window.location) "/")
             (s/chsk-reconnect! chsk))
         (println "failed to logout:" ajax-resp))))))
 
@@ -98,34 +107,41 @@
                                 :onClick #(logout app owner)}
                            "Logout")))))
 
-(defn login! [app username password]
+(defn login! [app owner username password]
   (s/ajax-call "/login"
                {:method :post
                 :params {:user-id username
                          :password password
                          :csrf-token (:csrf-token @chsk-state)}}
-               (fn [{:keys [?status] :as ajax-resp}]
-                 (println ajax-resp)
-                 (if (== ?status 200)
+               (fn [{:keys [?status ?error ?content] :as ajax-resp}]
+                 (if (= ?status 200)
                    (do
                      (secretary/dispatch! "/local")
                      (om/transact! app :username (fn [_] username))
                      (s/chsk-reconnect! chsk)
+                    ; (om/set-state! owner :status
+                    ;                {:success true
+                    ;                 :message "Welcome back!"}) 
                      )
-                   (println "failed to login:" ajax-resp)))))
+                   (om/set-state! owner :status
+                                  {:success false
+                                   :message "Something went wrong. Please double check your username and password, then try again."})))))
 
 (defn login-submit [keyval app owner]
   (when (= keyval "Enter")
     (let [username (-> (om/get-node owner "login-username") .-value)
           password (-> (om/get-node owner "login-password") .-value)]
       (if (and username password) ;; TODO do better validation
-        (login! app username password)
+        (login! app owner username password)
         nil))))
 
 (defn login-view [app owner]
   (reify
+    om/IInitState
+    (init-state [_]
+      {:status nil})
     om/IRenderState
-    (render-state [this state]
+    (render-state [this {:keys [status] :as state}]
       (dom/div nil
         (dom/div #js {:className "form-group"}
           (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
@@ -147,14 +163,19 @@
                             :placeholder "Password"}
                             )))
         (dom/div #js {:className "form-group"}
-          (dom/div #js {:className "col-xs-offset-3 col-xs-6"}
+          (dom/div #js {:className "col-xs-offset-3 col-xs-2"}
             (dom/button #js {:type "button"
                              :className "btn btn-primary"
                              :onTouch #(login-submit "Enter"
                                                      app owner)
                              :onClick #(login-submit "Enter"
                                                      app owner)}
-                        "Submit")))))))
+                        "Submit"))
+          (if-let [{:keys [success message]} status]
+            (dom/div #js {:className (str "col-xs-4" " "
+                                          (if success "success-text"
+                                            "failure-text"))}
+               (dom/span nil message))))))))
 
 (defn gateway-view [app owner]
   (reify
