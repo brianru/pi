@@ -39,16 +39,16 @@
   
   TODO parametrize on choice of d, with the ability to recur on larger
   or smaller values if the result is not satisfactory."
-  ([loc]
+  ([msgs loc]
    (calc-radius loc 3))
-  ([loc d]
+  ([msgs loc d]
    (dosync
      (let [recent (filter #(->> %
                                 :time
                                 t-coerce/from-long
                                 (t/after? (-> d t/days t/ago)))
-                          @all-msgs)]
-       (if (and (>= 50 (count @all-msgs))
+                          msgs)]
+       (if (and (>= 50 (count msgs))
                 (<  50 (count recent)))
          (calc-radius loc (* d 2))
          (let [calc-distance #(assoc % :distance
@@ -59,20 +59,17 @@
            (:distance max-msg)))))))
 
 (defn in-radius? 
-  ([loc1 loc2]
-   (if (and (util/coordinate? loc1) (util/coordinate? loc2))
-     (in-radius? (calc-radius loc1) loc1 loc2)))
   ([radius loc1 loc2]
    (println "in-radius? " radius)
    (if (and (util/coordinate? loc1) (util/coordinate? loc2))
      (<= (util/distance loc1 loc2) radius))))
 
-(defn local-messages [user loc msgs]
+(defn local-messages [loc msgs]
   (let [radius (calc-radius loc)]
     (->> msgs
          (filter #(in-radius? radius loc (:location %)))
          (sort-by :id >))))
 
-(defn local-users [loc users]
-  (let [radius (calc-radius loc)]
+(defn local-users [loc msgs users]
+  (let [radius (calc-radius msgs loc)]
     (filter #(in-radius? radius loc (:location %)) users)))

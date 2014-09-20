@@ -17,7 +17,7 @@
   (:import goog.History))
 
 (enable-console-print!)
-(secretary/set-config! :prefix "#")
+;(secretary/set-config! :prefix "#")
 
 (def app-container (. js/document (getElementById "app-container")))
 

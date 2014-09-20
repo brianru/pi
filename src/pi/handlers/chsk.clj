@@ -51,7 +51,7 @@
       (let [{:keys [username location]} (last event)
             user (get @all-users username)
             updated-user (assoc user :location location)
-            msgs (local-messages username location @all-msgs)]
+            msgs (local-messages location @all-msgs)]
         (dosync
           (ref-set all-users (assoc @all-users username updated-user))
           (chsk-send! uid [:swap/posts msgs]))))))
@@ -64,7 +64,8 @@
         (dosync
           (ref-set all-msgs (conj @all-msgs data))
           (doseq [user (local-users (:location data)
-                                             (connected-users))]
+                                    @all-msgs
+                                    (connected-users))]
             (chsk-send! (:uid user) [:new/post data])))))))
 
 (defonce    router_ (atom nil))

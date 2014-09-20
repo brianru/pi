@@ -14,6 +14,8 @@
                  [crypto-password "0.1.3"]
                  [clj-time "0.8.0"]
 
+                 [org.clojure/test.check "0.5.9"]
+
                  ;; Web communications
                  [ring/ring-core "1.3.1"]
                  [ring/ring-defaults "0.1.1"]
@@ -43,7 +45,8 @@
                        :jar-name "pi.jar"
                        :uberjar-name "uberpi.jar"
                        :hooks [leiningen.cljsbuild]
-                       }}
+                       }
+             :phonegap {}}
   :cljsbuild {:builds
               {:dev {:source-paths ["src-cljs/pi/"]
                      :compiler {:output-to "resources/public/js/main.js"
@@ -69,5 +72,21 @@
                           :foreign-libs [{:file "http://momentjs.com/downloads/moment.min.js"
                                           :provides ["pi.moment"]}]
                           :closure-warnings {:externs-validation :off
-                                             :non-standard-jsdoc :off}}}}}
+                                             :non-standard-jsdoc :off}}}
+               :phonegap {
+                          :source-paths ["src-cljs/pi"]
+                          :resource-paths ["resources/public/"]
+                          :compiler
+                          {:output-to "resources/public/js/main.js"
+                           :optimizations :advanced
+                           :elide-asserts true
+                           :pretty-print false
+                           :output-wrapper false
+                           :preamble ["react/react.min.js"]
+                           :externs ["react/externs/react.js"
+                                     "resources/public/js/externs/moment.min.js"]
+                           :foreign-libs [{:file "http://momentjs.com/downloads/moment.min.js"
+                                           :provides ["pi.moment"]}]
+                           :closure-warnings {:externs-validation :off
+                                              :non-standard-jsdoc :off}}}}}
               )
