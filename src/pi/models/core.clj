@@ -65,7 +65,7 @@
      (<= (util/distance loc1 loc2) radius))))
 
 (defn local-messages [loc msgs]
-  (let [radius (calc-radius loc)]
+  (let [radius (calc-radius msgs loc)]
     (->> msgs
          (filter #(in-radius? radius loc (:location %)))
          (sort-by :id >))))
