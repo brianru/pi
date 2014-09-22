@@ -25,8 +25,8 @@
 (defn submit-post [app owner]
   (let [msg  (om/get-state owner :post)
         post {:msg msg
-              :author (get @app :username)
-              :location (get @app :location)}]
+              :author (get-in @app [:user :uid])
+              :location (get-in @app [:user :location])}]
     (when msg
       (chsk-send! [:submit/post post])
       (om/set-state! owner :post "")
@@ -42,9 +42,11 @@
       {:post ""})
     om/IRenderState
     (render-state [this {:keys [post] :as state}]
-      (let [username (get app :username)
+      (println "here")
+      (let [user (get app :user)
+            username (:uid user)
             has-access (-> username blank? not)
-            has-location (-> (get app :location) :latitude)
+            has-location (-> user :location :latitude)
             ready (and has-access has-location)]
         (dom/div #js {:className "new-post"}
           (dom/textarea #js {:ref "new-post"
@@ -77,24 +79,21 @@
       (let [locate (om/get-state owner :locate)]
         (go (loop []
               (let [new-loc (<! locate)
-                    old-loc (:location @app)]
+                    old-loc (get-in @app [:user :location])]
                 (when-not (= old-loc new-loc)
-                  (om/transact! app :location #(merge % new-loc))
+                  (om/transact! app :user #(assoc % :location new-loc))
                   (chsk-send! [:update/location
-                               {:username (:username @app)
-                                :location (:location @app)}])))
+                               {:username (-> @app :user :uid)
+                                :location (-> @app :user :location)}])))
               (recur))))
       (let [locate (om/get-state owner :locate)]
         (locateMe locate)))
         ;(util/exp-repeater #(locateMe locate) 7)))
-
     om/IRenderState
     (render-state [this state]
       (dom/div #js {:className "container"}
-        (om/build navbar (select-keys app [:username :nav]))
-        (dom/h4 nil (util/display-location (:location app)))
-        (om/build new-post app
-                  {:init-state
-                   (select-keys app [:location :username])})
+        (om/build navbar (select-keys app [:user :nav]))
+        (dom/h4 nil (util/display-location (-> app :user :location)))
+        (om/build new-post app {:init-state (:user app)})
         (apply dom/div #js {:className "message-list"}
                (om/build-all message-view (get app :messages)))))))

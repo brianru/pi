@@ -2,11 +2,11 @@
 
 (def app-state
   (atom
-    ; TODO this 
-    ;{:user {:uid ""
-    ;        :location {:latitude 90
-    ;                   :longitude 0}}}
-    {:nav [{:name "Register"
+    {:initialized false
+     :user {:uid ""
+            :location {:latitude 90
+                       :longitude 0}}
+     :nav [{:name "Register"
             :path "/register"
             :active false
             :side :right
@@ -36,14 +36,13 @@
             :active false
             :side :left
             :restricted true}]
-     ;; {:name "Somethin to do"
-     ;;  :path "Where to do it"}
-     :notifications []
+     :notifications [] ;; {:path "/" :name "Alert!"}
      :max-id 0
-     :initialized false
      :location {:latitude nil
                 :longitude nil}
      :post ""
-     :username ""
      :messages (list) 
+     :teleport {:location {:latitude 90
+                           :longitude 0}
+                :messages (list)}
      }))

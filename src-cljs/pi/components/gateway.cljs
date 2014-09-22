@@ -22,7 +22,7 @@
                (fn [{:keys [?status ?error ?content] :as ajax-resp}]
                  (if (= ?status 200)
                    (do
-                     (om/transact! app :username (fn [_] username))
+                     (om/transact! app :user #(assoc % :uid username))
                      (secretary/dispatch! "/local")
                      (s/chsk-reconnect! chsk)
                   ;   (om/set-state! owner :status {:success true
@@ -88,7 +88,7 @@
       (fn [{:keys [?status] :as ajax-resp}]
         (if (= ?status 200)
           (do
-            (om/transact! app :username (fn [_] ""))
+            (om/transact! app :user #(assoc % :uid ""))
             (secretary/dispatch! "/")
             (s/chsk-reconnect! chsk))
         (println "failed to logout:" ajax-resp))))))
@@ -116,7 +116,7 @@
                (fn [{:keys [?status ?error ?content] :as ajax-resp}]
                  (if (= ?status 200)
                    (do
-                     (om/transact! app :username (fn [_] username))
+                     (om/transact! app :user #(assoc % :uid username))
                      (secretary/dispatch! "/local")
                      (s/chsk-reconnect! chsk)
                     ; (om/set-state! owner :status
@@ -184,7 +184,7 @@
       (dom/div #js {:className "jumbotron form-horizontal"}
         (om/build navbar app)
         (dom/div #js {:className "container login"}
-          (if-not (blank? (get app :username))
+          (if-not (blank? (get-in app [:user :uid]))
             (om/build logout-view app )
             (dom/div nil
                     (om/build login-view app )

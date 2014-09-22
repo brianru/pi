@@ -3,23 +3,41 @@
             [clj-time.coerce :as t-coerce]
             [clj-time.core :as t]))
 
+(defrecord Coordinate [latitude longitude])
+
 (let [max-id (atom 0)]
-  (defn next-id []
+  (defn next-uid []
     (swap! max-id inc)))
-
-(defonce all-msgs (ref []))
-                       ;{:id (next-id)
-                       ; :time (util/now)
-                       ; :msg "woah! I can talk!"
-                       ; :author "dr. seuss"
-                       ; :location {:latitude 90 :longitude 0}}
-
+(defrecord User [uid password location])
 (defonce all-users (ref {}))
                         ;{"apple" {:uid "apple"
                         ;          :password nil
                         ;          :location nil
                         ;          }
-                         
+
+(let [max-id (atom 0)]
+  (defn next-mid []
+    (swap! max-id inc)))
+(defrecord Message [mid uid msg time location])
+(defonce all-msgs (ref []))
+                       ;{:id (next-id)
+                       ; :time (util/now)
+                       ; :msg "woah! I can talk!"
+                       ; :uid "dr. seuss"
+                       ; :location {:latitude 90 :longitude 0}}
+
+(let [max-id (atom 0)]
+  (defn next-vid []
+    (swap! max-id inc)))
+(defrecord Vote [vid mid uid time location])
+(defonce all-votes (ref []))
+
+(let [max-id (atom 0)]
+  (defn next-cid []
+    (swap! max-id inc)))
+(defrecord Comment [cid mid uid cmt time location])
+(defonce all-comments (ref []))
+
 
 (defn calc-radius
   "What matters is not just the number of messages within a radius,

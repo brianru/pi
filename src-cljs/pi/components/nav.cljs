@@ -17,9 +17,10 @@
                     :onClick #(secretary/dispatch! path)}
                (or (om/get-state owner name) name))))))
 
-(defn nav-for [{:keys [nav username]} side]
-  (filter (fn [itm] (and (= (:side itm) side)
-                         (= (:restricted itm) (-> username blank? not))))
+(defn nav-for [{:keys [nav user]} side]
+  (filter (fn [itm]
+            (and (= (:side itm) side)
+                 (= (:restricted itm) (-> user :uid blank? not))))
           nav))
 
 (defn notification [data owner]
@@ -61,10 +62,12 @@
           (dom/div nil
             (apply dom/ul #js {:className "nav navbar-nav"}
               (om/build-all nav-item (nav-for app :left)
-                            {:init-state {:username (:username app)}}))
-            ;; TODO add notifications in the center
+                            {:init-state
+                             {:username (-> app :user :uid)}}))
             (apply dom/ul #js {:className "nav navbar-nav navbar-right"}
-              (if (-> (:username app) blank? not) (om/build notifications app))
+              (if (-> app :user :uid blank? not)
+                (om/build notifications app))
               (om/build-all nav-item (nav-for app :right)
-                            {:init-state {:username (:username app)}}))
+                            {:init-state {:username
+                                          (-> app :user :uid)}}))
                  ))))))

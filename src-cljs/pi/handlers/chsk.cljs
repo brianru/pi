@@ -27,21 +27,26 @@
 
 (defmethod event-msg-handler :new/post
   [{:as ev-msg :keys [event ?data]}]
-  (let [d (last ?data)
-        post (assoc d :distance (util/distance (:location d)
-                                             (:location @app-state)))]
+  (let [cur-loc (get-in @app-state [:user :location])
+        d (last ?data)
+        post (assoc d :distance (util/distance (:location d) cur-loc))]
     (if (> (:id post) (:max-id @app-state))
       (swap! app-state assoc :messages
              (cons post (:messages @app-state))))))
 
 (defmethod event-msg-handler :swap/posts
   [{:as ev-msg :keys [event ?data]}]
-  (let [cur-loc (:location @app-state)
+  (let [cur-loc (get-in @app-state [:user :location])
         raw (last ?data)
         msgs (map #(assoc % :distance
                           (util/distance cur-loc (:location %)))
                   raw)]
     (swap! app-state assoc :messages msgs)))
+
+(defmethod event-msg-handler :swap-teleport/posts
+  [{:as ev-msg :keys [event ?data]}]
+  (let [raw (last ?data)]
+    (swap! app-state assoc-in [:teleport :messages] raw)))
 
 ;; INIT
 (def        router_ (atom nil))
