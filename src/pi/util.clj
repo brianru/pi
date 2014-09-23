@@ -1,5 +1,8 @@
 (ns pi.util
   (:require [geo.core :as geo]
+            [clojure.data.json :as json]
+            [org.httpkit.client :as http]
+            [clojure.core.async :refer [>!! <!! chan]]
             ))
 
 ;; TODO memoize
@@ -20,3 +23,27 @@
        (geo/longitude? longitude)))
 
 (defn now [] (quot (System/currentTimeMillis) 1000))
+
+(defn geocode
+  "Replace a given natural language location with its coordinates
+  via an async channel as the return value.
+  
+  Optionally accepts the callback channel as an argument."
+  ([place]
+   (geocode place (chan 1)))
+  ([place chan]
+   (let [endpoint "https://maps.googleapis.com/maps/api/geocode/json"
+         api-key  "AIzaSyAmmkhErSKLgONi0mEaNgxKtI25R5QIEeg"]
+     (http/get endpoint {:query-params {:key api-key
+                                        :address place}}
+               #(let [res (-> %
+                              :body
+                              json/read-str
+                              (get "results")
+                              first
+                              (get-in ["geometry"
+                                       "location"]))
+                      result {:latitude (get res "lat")
+                              :longitude (get res "lng")}]
+                  (>!! chan result)))
+     chan)))

@@ -49,8 +49,12 @@
 
 (defmethod event-msg-handler :swap-teleport/posts
   [{:as ev-msg :keys [event ?data]}]
-  (let [raw (last ?data)]
-    (swap! app-state assoc-in [:teleport :messages] raw)))
+  (let [{:as raw :keys [location messages]} (last ?data)
+        msgs     (map #(assoc % :distance
+                              (util/distance location (:location %)))
+                      messages)
+        teleport (assoc raw :messages msgs)]
+    (swap! app-state assoc :teleport teleport)))
 
 ;; INIT
 (def        router_ (atom nil))

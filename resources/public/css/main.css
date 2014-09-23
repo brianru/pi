@@ -33,6 +33,9 @@ textarea {
 .new-post > textarea {
     margin-bottom: 12px;
 }
+.teleport-input {
+    margin-bottom: 24px;
+}
 .message-list > .message.row {
     border-top: 1px solid #666666;
     border-bottom: 1px solid #666666;

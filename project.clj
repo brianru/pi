@@ -7,9 +7,11 @@
                  [org.clojure/clojurescript "0.0-2341"]
                  [org.clojure/core.cache "0.6.4"]
                  [org.clojure/core.memoize "0.5.6"]
-                 [org.clojure/core.async "0.1.338.0-5c5012-alpha"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [environ "1.0.0"]
                  [com.taoensso/encore "1.9.1"]
+                 [org.clojure/data.json "0.2.5"]
+
                  ;; TODO [com.taoensso/tower "3.0.1"]
                  [crypto-password "0.1.3"]
                  [clj-time "0.8.0"]

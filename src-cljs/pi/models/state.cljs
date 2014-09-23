@@ -42,7 +42,8 @@
      :post ""
      :messages (list) 
      :max-mid 0 ;; this is max mid the client has seen
-     :teleport {:location {:latitude 90
-                           :longitude 0}
+     :teleport {:place    ""
+                :location {:latitude nil
+                           :longitude nil}
                 :messages (list)}
      }))

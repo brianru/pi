@@ -10,6 +10,8 @@
             [pi.util :as util]
             ))
 
+;; Create channel for communicating with clients
+;; and bind send/receive functions to local names.
 (let [{:keys [ch-recv
               send-fn
               ajax-post-fn
@@ -23,7 +25,7 @@
   (def connected-uids   connected-uids))
 
 (defn connected-users
-  "Get them all, or, only those within the radius of a given location."
+  "Get all connected users."
   ([]
    (dosync
      (map #(get @all-users %) (:any @connected-uids)))))
@@ -67,6 +69,18 @@
                                     @all-msgs
                                     (connected-users))]
             (chsk-send! (:uid user) [:new/post data])))))))
+
+(defmethod event-msg-handler :update/teleport-location
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
+  (let [uid (-> ring-req :session :uid)]
+    (if-not (or (nil? uid) (blank? uid))
+      (let [place    (last event)
+            location (<!! (util/geocode place))
+            messages (local-messages location @all-msgs)]
+        (chsk-send! uid [:swap-teleport/posts {:place    place
+                                               :location location
+                                               :messages messages}])
+        ))))
 
 (defonce    router_ (atom nil))
 (defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))

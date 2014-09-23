@@ -77,16 +77,15 @@
     om/IWillMount
     (will-mount [_]
       (let [locate (om/get-state owner :locate)]
-        (go (loop []
-              (let [new-loc (<! locate)
-                    old-loc (get-in @app [:user :location])]
-                (println old-loc new-loc)
-                (when-not (= old-loc new-loc)
-                  (om/transact! app :user #(assoc % :location new-loc))
-                  (chsk-send! [:update/location
-                               {:uid      (-> @app :user :uid)
-                                :location (-> @app :user :location)}])))
-              (recur))))
+        (go-loop []
+          (let [new-loc (<! locate)
+                old-loc (get-in @app [:user :location])]
+            (when-not (= old-loc new-loc)
+              (om/transact! app :user #(assoc % :location new-loc))
+              (chsk-send! [:update/location
+                           {:uid      (-> @app :user :uid)
+                            :location (-> @app :user :location)}])))
+          (recur)))
       (let [locate (om/get-state owner :locate)]
         (locateMe locate)
         (js/setInterval #(locateMe locate) 60000)))
