@@ -5,8 +5,7 @@
                              :include-macros true]
             [om.dom          :as dom
                              :include-macros true]
-            [cljs.core.async :as async :refer [put! chan <! >!
-                                     sliding-buffer]]
+            [cljs.core.async :as async :refer [put! chan <! >!]]
             [clojure.string :refer [blank?]]
             [pi.util :as util]
             [pi.handlers.chsk :refer [chsk chsk-send! chsk-state]]
@@ -68,11 +67,18 @@
                                :onClick #(submit-post user owner)}
                           "Submit"))))))))
 
-(defn local-view [app owner]
+(defn local-view
+  "Refreshes approximately every minute by sending the latest location
+  to the server, which motivates the server to send back the messages
+  within range of that location.
+  
+  Clients also receive real-time updates of new posts based on users'
+  last known location."
+  [app owner]
   (reify
     om/IInitState
     (init-state [_]
-      {:locate (chan (sliding-buffer 3))})
+      {:locate (chan)})
 
     om/IWillMount
     (will-mount [_]

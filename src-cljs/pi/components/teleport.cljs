@@ -31,13 +31,17 @@
 (defn enter? [key-down]
   (= (.-key key-down) "Enter"))
 
-(defn teleport-view [app owner]
+(defn teleport-view
+  "Refreshes approximately every minute by sending the latest
+  teleport location to the server, which motivates the server to send back
+  the messages within range of that location."
+  [app owner]
   (reify
     om/IWillMount
     (will-mount [_]
       (refresh (get-in app [:teleport :place]))
       (js/setInterval #(refresh (get-in @app [:teleport :place]))
-                      1000))
+                      10000))
 
     om/IRenderState
     (render-state [this state]
@@ -58,7 +62,7 @@
                 (dom/input #js {:className "form-control"
                                 :ref "teleport-destination"
                                 :type "text"
-                                :placeholder place
+                                :placeholder "Where do you want to go?"
                                 :onKeyDown
                                   #(if (enter? %)
                                      (teleport-submit app owner))}))))

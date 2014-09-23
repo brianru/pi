@@ -30,7 +30,9 @@
         {:keys [user-id password]} params]
     (dosync
       (let [user (get @all-users user-id)
-            good (if user (pw/check password (:password user)) false)]
+            good (if-let [cur-pass (:password user)]
+                   (pw/check password cur-pass)
+                   false)]
         (if good
           {:status 200 :session (assoc session :uid user-id)}
           {:status 401})))))

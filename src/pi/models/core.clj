@@ -39,6 +39,20 @@
 (defonce all-comments (ref []))
 
 
+(defn recent? [lookback t]
+  (->> t
+       :time
+       t-coerce/from-long
+       (t/after? (-> lookback t/days t/ago))))
+
+(defn furthest-message [msgs loc]
+  (let [set-distance! #(assoc % :distance
+                              (util/distance loc (:location %)))
+        calcd  (map set-distance! msgs)
+        sorted (sort-by :distance calcd)
+        max-msg (first (max-key :distance sorted))]
+    max-msg))
+
 (defn calc-radius
   "What matters is not just the number of messages within a radius,
   but also, their timeliness.
@@ -52,46 +66,42 @@
   Each line is always increasing, but each line is also very different.
   Some days are slower than others.
 
-  For this reason the choice of d, in this case fixed to a single value,
+  For this reason the choice of lookback period,
+  in this case fixed to a single value,
   has a great impact on the quality of the result.
   "
   ([msgs loc]
    (calc-radius msgs loc 3))
-  ([msgs loc d]
-   (dosync
-     (let [recent (filter #(->> %
-                                :time
-                                t-coerce/from-long
-                                (t/after? (-> d t/days t/ago)))
-                          msgs)]
-       (cond
-         (and (>= 50 (count msgs)) (<  50 (count recent)))
-         (do
-           (println "recursing")
-           (calc-radius msgs loc (* d 2))
-           )
+  ([msgs loc lookback]
+  ; (println "all msgs given to calc-radius: " (count msgs))
+   (if (> (count msgs) 0)
+     (dosync
+       (let [recent-msgs (filter #(recent? lookback %) msgs)]
+         ;(println "Recent-msgs: " (count recent-msgs))
+         (cond
+           (and (>= (count msgs) 50) (< (count recent-msgs) 50))
+           (do ;(println "recursing" loc lookback)
+               (calc-radius msgs loc (* lookback 2)))
 
-         :else
-         (let [set-distance! #(assoc % :distance
-                                 (util/distance loc (:location %)))
-               calcd  (map set-distance! recent)
-               sorted (sort-by :distance calcd)
-               max-msg (first (max-key :distance sorted))]
-           (:distance max-msg)))
-       ))))
+           :else
+           (inc (:distance (furthest-message recent-msgs loc))))))
+     0.0)))
 
 (defn in-radius?
   [radius loc1 loc2]
-  (println "in-radius? " radius)
   (if (and (util/coordinate? loc1) (util/coordinate? loc2))
-    (<= (util/distance loc1 loc2) radius)))
+    (<= (util/distance loc1 loc2) radius)
+    (println "invalid! " loc1 loc2)))
 
 (defn local-messages [loc msgs]
-  (let [radius (calc-radius msgs loc)]
-    (->> msgs
-         (filter #(in-radius? radius loc (:location %)))
-         (sort-by :mid >))))
+  (let [radius (calc-radius msgs loc)
+        local  (filter #(in-radius? radius loc (:location %)) msgs)]
+  ;  (println "radius: " radius)
+  ;  (println "local messages: " (count local) "/" (count msgs))
+    (sort-by :mid > local)))
 
 (defn local-users [loc msgs users]
-  (let [radius (calc-radius msgs loc)]
-    (filter #(in-radius? radius loc (:location %)) users)))
+  (let [radius (calc-radius msgs loc)
+        local  (filter #(in-radius? radius loc (:location %)) users)]
+  ;  (println "local users: " (count local) "/" (count users))
+    local))
