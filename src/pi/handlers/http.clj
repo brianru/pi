@@ -6,7 +6,7 @@
             [environ.core                 :refer [env]]
             (compojure [core              :refer [defroutes GET POST]]
                        [route             :as route])
-            [pi.models.core               :refer [all-users]]
+            [pi.models.core               :refer [all-users ->User]]
             [pi.views.layout              :as layout]
             [pi.handlers.chsk :refer [ring-ajax-get-ws ring-ajax-post]]))
 
@@ -19,11 +19,10 @@
       (dosync
         (ref-set all-users
                  (assoc @all-users user-id
-                        {:uid user-id
-                         :password hash-pass
-                         :location {:latitude nil
-                                    :longitude nil}
-                         :radius nil}))
+                        (->User user-id
+                                hash-pass
+                                {:latitude nil :longitude nil}
+                                nil)))
         {:status 200 :session (assoc session :uid user-id)}))))
 
 (defn login! [ring-request]

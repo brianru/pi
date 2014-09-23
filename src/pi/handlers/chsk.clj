@@ -6,7 +6,7 @@
             [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
             [pi.models.core :refer [all-msgs all-users
-                                    next-id local-messages local-users]]
+                                    next-mid local-messages local-users]]
             [pi.util :as util]
             ))
 
@@ -48,19 +48,19 @@
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
   (let [uid (-> ring-req :session :uid)]
     (if-not (or (nil? uid) (blank? uid))
-      (let [{:keys [username location]} (last event)
-            user (get @all-users username)
-            updated-user (assoc user :location location)
-            msgs (local-messages location @all-msgs)]
+      (let [{:keys [uid location]} (last event)
+            user  (get @all-users uid)
+            user* (assoc user :location location)
+            msgs  (local-messages location @all-msgs)]
         (dosync
-          (ref-set all-users (assoc @all-users username updated-user))
+          (ref-set all-users (assoc @all-users uid user*))
           (chsk-send! uid [:swap/posts msgs]))))))
 
 (defmethod event-msg-handler :submit/post
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
-  (let [{:keys [msg author location] :as post} (last event)]
+  (let [{:keys [msg uid location] :as post} (last event)]
     (when msg
-      (let [data (merge post {:time (util/now) :id (next-id)})]
+      (let [data (merge post {:time (util/now) :mid (next-mid)})]
         (dosync
           (ref-set all-msgs (conj @all-msgs data))
           (doseq [user (local-users (:location data)

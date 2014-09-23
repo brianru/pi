@@ -4,8 +4,8 @@
   (atom
     {:initialized false
      :user {:uid ""
-            :location {:latitude 90
-                       :longitude 0}}
+            :location {:latitude nil
+                       :longitude nil}}
      :nav [{:name "Register"
             :path "/register"
             :active false
@@ -37,11 +37,11 @@
             :side :left
             :restricted true}]
      :notifications [] ;; {:path "/" :name "Alert!"}
-     :max-id 0
      :location {:latitude nil
                 :longitude nil}
      :post ""
      :messages (list) 
+     :max-mid 0 ;; this is max mid the client has seen
      :teleport {:location {:latitude 90
                            :longitude 0}
                 :messages (list)}

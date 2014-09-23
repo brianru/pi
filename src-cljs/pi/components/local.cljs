@@ -22,11 +22,11 @@
     (.getCurrentPosition js/navigator.geolocation
                          #(put! locate (util/parse-location %)))))
 
-(defn submit-post [app owner]
+(defn submit-post [user owner]
   (let [msg  (om/get-state owner :post)
         post {:msg msg
-              :author (get-in @app [:user :uid])
-              :location (get-in @app [:user :location])}]
+              :uid (get @user :uid)
+              :location (get @user :location)}]
     (when msg
       (chsk-send! [:submit/post post])
       (om/set-state! owner :post "")
@@ -35,16 +35,14 @@
 (defn meta-enter? [k]
   (and (.-metaKey k) (= (.-key k) "Enter")))
 
-(defn new-post [app owner]
+(defn new-post [user owner]
   (reify
     om/IInitState
     (init-state [_]
       {:post ""})
     om/IRenderState
     (render-state [this {:keys [post] :as state}]
-      (println "here")
-      (let [user (get app :user)
-            username (:uid user)
+      (let [username (get user :uid)
             has-access (-> username blank? not)
             has-location (-> user :location :latitude)
             ready (and has-access has-location)]
@@ -56,7 +54,7 @@
                              :rows "3"
                              :value post
                              :onKeyDown #(if (meta-enter? %)
-                                           (submit-post app owner))
+                                           (submit-post user owner))
                              :onChange #(handle-change % owner)})
           (dom/div #js {:className "row"}
             (dom/div #js {:className "pull-left"} (count post))
@@ -65,8 +63,8 @@
                                :disabled (or (not ready)
                                              (blank? post))
                                :className "btn btn-primary"
-                               :onTouch #(submit-post app owner)
-                               :onClick #(submit-post app owner)}
+                               :onTouch #(submit-post user owner)
+                               :onClick #(submit-post user owner)}
                           "Submit"))))))))
 
 (defn local-view [app owner]
@@ -83,7 +81,7 @@
                 (when-not (= old-loc new-loc)
                   (om/transact! app :user #(assoc % :location new-loc))
                   (chsk-send! [:update/location
-                               {:username (-> @app :user :uid)
+                               {:uid      (-> @app :user :uid)
                                 :location (-> @app :user :location)}])))
               (recur))))
       (let [locate (om/get-state owner :locate)]
@@ -94,6 +92,6 @@
       (dom/div #js {:className "container"}
         (om/build navbar (select-keys app [:user :nav]))
         (dom/h4 nil (util/display-location (-> app :user :location)))
-        (om/build new-post app {:init-state (:user app)})
+        (om/build new-post (get app :user)) ;{:init-state (:user app)})
         (apply dom/div #js {:className "message-list"}
                (om/build-all message-view (get app :messages)))))))

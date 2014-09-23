@@ -25,12 +25,16 @@
   (println "Unhandled event:" event)
   nil)
 
+(defn unseen-message? [post]
+  (let [mids (map :mid (get @app-state :messages))]
+    (not (some #(== (:mid post) %) mids))))
+
 (defmethod event-msg-handler :new/post
   [{:as ev-msg :keys [event ?data]}]
   (let [cur-loc (get-in @app-state [:user :location])
         d (last ?data)
         post (assoc d :distance (util/distance (:location d) cur-loc))]
-    (if (> (:id post) (:max-id @app-state))
+    (if (unseen-message? post) 
       (swap! app-state assoc :messages
              (cons post (:messages @app-state))))))
 
