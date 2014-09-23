@@ -42,26 +42,27 @@
       {:post ""})
     om/IRenderState
     (render-state [this {:keys [post] :as state}]
-      (let [username (get user :uid)
-            has-access (-> username blank? not)
+      (let [username     (get user :uid)
+            has-access   (-> username blank? not)
             has-location (-> user :location :latitude)
-            ready (and has-access has-location)]
+            usable       (and has-access has-location)
+            submittable  (and usable (-> post blank? not))]
         (dom/div #js {:className "new-post"}
           (dom/textarea #js {:ref "new-post"
                              :className "form-control"
                              :placeholder "What's happening?"
-                             :disabled (not ready)
+                             :disabled (not usable)
                              :rows "3"
                              :value post
-                             :onKeyDown #(if (meta-enter? %)
+                             :onKeyDown #(if (and submittable
+                                                  (meta-enter? %))
                                            (submit-post user owner))
                              :onChange #(handle-change % owner)})
           (dom/div #js {:className "row"}
             (dom/div #js {:className "pull-left"} (count post))
             (dom/div #js {:className "pull-right"}
               (dom/button #js {:type "button"
-                               :disabled (or (not ready)
-                                             (blank? post))
+                               :disabled (not submittable)
                                :className "btn btn-primary"
                                :onTouch #(submit-post user owner)
                                :onClick #(submit-post user owner)}
@@ -72,12 +73,14 @@
     om/IInitState
     (init-state [_]
       {:locate (chan (sliding-buffer 3))})
+
     om/IWillMount
     (will-mount [_]
       (let [locate (om/get-state owner :locate)]
         (go (loop []
               (let [new-loc (<! locate)
                     old-loc (get-in @app [:user :location])]
+                (println old-loc new-loc)
                 (when-not (= old-loc new-loc)
                   (om/transact! app :user #(assoc % :location new-loc))
                   (chsk-send! [:update/location
@@ -85,8 +88,9 @@
                                 :location (-> @app :user :location)}])))
               (recur))))
       (let [locate (om/get-state owner :locate)]
-        (locateMe locate)))
-        ;(util/exp-repeater #(locateMe locate) 7)))
+        (locateMe locate)
+        (js/setInterval #(locateMe locate) 60000)))
+
     om/IRenderState
     (render-state [this state]
       (dom/div #js {:className "container"}

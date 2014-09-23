@@ -22,6 +22,6 @@
                    (util/from-now (get message :time))))
         (dom/div #js {:className "row bottom-row"}
           (dom/div #js {:className "col-xs-6 col-md-2"}
-                   (get message :author))
+                   (get message :uid))
           (dom/div #js {:className "col-xs-6 col-md-2 col-md-offset-8"}
                    (util/format-km (get message :distance))))))))

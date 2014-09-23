@@ -90,7 +90,7 @@
   (let [radius (calc-radius msgs loc)]
     (->> msgs
          (filter #(in-radius? radius loc (:location %)))
-         (sort-by :id >))))
+         (sort-by :mid >))))
 
 (defn local-users [loc msgs users]
   (let [radius (calc-radius msgs loc)]
