@@ -80,6 +80,27 @@
                                     (connected-users))]
             (chsk-send! (:uid user) [:new/post data])))))))
 
+(defmethod event-msg-handler :submit/vote
+  [{:keys [event ring-req]}]
+  (let [uid   (-> ring-req :session :uid)
+        user  (get @all-users uid)
+        vote  (last event)
+        vote* {:vid      (next-vid)
+               :mid      (:mid vote)
+               :uid      uid
+               :time     (util/now)
+               :location (:location user)}]
+    (dosync
+      (ref-set all-votes (conj @all-votes vote*))
+      (doseq [user (local-users (:location vote*)
+                                @all-msgs
+                                (connected-users))]
+        (chsk-send! (:uid user) [:new/vote vote*])))))
+
+(defmethod event-msg-handler :submit/comment
+  [{:keys [event ring-req]}]
+  nil)
+
 (defmethod event-msg-handler :update/teleport-location
   [{:keys [event ring-req]}]
   (let [uid (-> ring-req :session :uid)]
@@ -89,8 +110,7 @@
             messages (local-messages location @all-msgs)]
         (chsk-send! uid [:swap-teleport/posts {:place    place
                                                :location location
-                                               :messages messages}])
-        ))))
+                                               :messages messages}])))))
 
 (defonce    router_ (atom nil))
 (defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))

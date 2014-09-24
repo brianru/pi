@@ -41,7 +41,9 @@
                 :longitude nil}
      :post ""
      :messages (list) 
+     :votes    (list)
      :max-mid 0 ;; this is max mid the client has seen
+     :max-vid 0
      :teleport {:place    ""
                 :location {:latitude nil
                            :longitude nil}

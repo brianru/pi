@@ -38,13 +38,36 @@
       (swap! app-state assoc :messages
              (cons post (:messages @app-state))))))
 
+(defn unseen-vote? [vote]
+  (let [vids (map :vid (get @app-state :votes))]
+    (not (some #(== (:vid post) %) vids))))
+
+(defn vote-for! [mid]
+  (let [msg (get-in @app-state [:messages mid])
+        msg* (assoc msg :votes (inc (:votes msg)))]
+    (swap! app-state assoc-in [:messages mid] msg*)))
+
+(defmethod event-msg-handler :new/vote
+  [{:as ev-msg :keys [event ?data]}]
+  (let [cur-loc (get-in @app-state [:user :location])
+        d       (last ?data)
+        vote    (assoc d :distance
+                       (util/distance (:location d) cur-loc))]
+    (if (unseen-vote? vote)
+      (swap! app-state assoc :votes
+             (cons vote (:votes @app-state)))
+      (vote-for! (:mid vote)))))
+
+(defmethod event-msg-handler :new/comment
+  [{:as ev-msg :leys [event ?data]}]
+  nil)
+
 (defmethod event-msg-handler :swap/posts
   [{:as ev-msg :keys [event ?data]}]
   (let [cur-loc (get-in @app-state [:user :location])
         raw (last ?data)
         msgs (map #(assoc % :distance
-                          (util/distance cur-loc (:location %)))
-                  raw)]
+                          (util/distance cur-loc (:location %))) raw)]
     (swap! app-state assoc :messages msgs)))
 
 (defmethod event-msg-handler :swap-teleport/posts

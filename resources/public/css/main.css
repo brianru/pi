@@ -48,13 +48,37 @@ textarea {
 .btn {
     width: 132px;
 }
-.message > .top-row > div:first-child {
+.message .top-row > div:first-child {
     font-size: 16px;
 }
-.message > .row {
+.message .row {
     font-size: 12px;
     line-height: 24px;
 }
-.message > .row > div:last-child {
+.message .row > div:last-child {
     text-align: right;
+}
+.message .vote-controls {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    list-style-type: none;
+    height: 48px;
+}
+
+.vote-controls > li {
+    height: 16px;
+}
+.vote-controls > li:hover {
+    color: blue;
+
+}
+
+.vote-controls .glyphicon {
+    font-size: 12px;
+    top: 0;
+}
+
+.glyphicon.glyphicon-chevron-up {
+    padding-left: 1px !important; // not aligned with down chevron
 }
