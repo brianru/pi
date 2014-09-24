@@ -21,18 +21,8 @@
           msg-locs  (map :location msgs)
           msg-dists (map #(util/distance loc %) msg-locs)
           furthest-distance (util/distance loc (:location furthest))
-          max-dist  (first (max msg-dists))]
-      (println furthest-distance max-dist)
+          max-dist  (apply max msg-dists)]
       (== furthest-distance max-dist))))
-
-(test #'furthest-is-correct)
-
-(util/distance {:latitude 3 :longitude 3} {:latitude 0 :longitude 0})
-
-(furthest-message (list (->Message 0 0 "" 0 (->Coordinate 3 1))
-                        (->Message 0 0 "" 0 (->Coordinate 0 2))
-                        (->Message 0 0 "" 0 (->Coordinate 3 3)))
-                  (->Coordinate 0 0))
 
 (defspec bounded-radius ;; closest <= radius <= furthest
   1000
