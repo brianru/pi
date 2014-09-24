@@ -22,9 +22,14 @@ Users will also be able to travel through time, because why not?
 
 ### How To
 
+#### Local
 ```bash
-$ lein cljsbuild auto
-$ lein run
+$ lein cljsbuild auto dev
+$ lein run dev
+```
+#### Server
+```bash
+$ lein uberjar
 ```
 
 ### Documentation
