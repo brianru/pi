@@ -12,8 +12,7 @@
                              :include-macros true
                              :refer [defroute]]
             [goog.events     :as events]
-            [goog.history.EventType :as EventType]
-    )
+            [goog.history.EventType :as EventType])
   (:import goog.History))
 
 (enable-console-print!)
@@ -21,11 +20,15 @@
 
 (def app-container (. js/document (getElementById "app-container")))
 
+;; NOTE much of this code exists to synchronize the address bar
+;; with secretary's routing.
+;;
+;; I removed the important parts as it was noticeably slowing down
+;; the site. I was probably doing something wrong. In the meantime,
+;; this code feels like a ghosttown.
+
 (defn render-page [component state target]
   (om/root component state {:target target}))
-                          ;  :instrument (fn [f cursor m]
-                          ;                (om/build* nav-instrument
-                          ;                           [f cursor m]))}))
 
 (defn refresh-navigation [new-path]
   (let [set-active (fn [nav]
@@ -49,9 +52,9 @@
 (defn on-navigate [event]
   (refresh-navigation)
   (secretary/dispatch! (.-token event)))
-;
+
 (def history (History.))
-; 
+ 
 (doto history
   (goog.events/listen EventType/NAVIGATE on-navigate)
   (.setEnabled true))

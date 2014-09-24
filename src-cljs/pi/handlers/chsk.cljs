@@ -1,10 +1,9 @@
-;; Client <-> Server Application Data Communications
+;; Client <-> Server Interface Layer
+;; Server Oriented
 ;;
-;; Verbs
-;; ====================
-;; Increment
-;; Swap
-;; TODO remove specifics about the type of data from this namespace
+;; This must ONLY parse relevant data from messages based on the
+;; message category, as indicated by the keyword in the first position of
+;; ?data.
 ;;
 (ns pi.handlers.chsk
   (:require [pi.models.state :refer [app-state]]
@@ -93,4 +92,3 @@
 (defn start-router! []
   (stop-router!)
   (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler*)))
-
