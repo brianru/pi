@@ -1,3 +1,6 @@
+;; Client <-> Server Resources and Authentication Communications
+;;
+;; 
 (ns pi.handlers.http
   (:require [org.httpkit.server           :as kit]
             [ring.middleware.defaults     :refer :all]

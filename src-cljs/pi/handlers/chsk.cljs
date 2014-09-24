@@ -1,3 +1,11 @@
+;; Client <-> Server Application Data Communications
+;;
+;; Verbs
+;; ====================
+;; Increment
+;; Swap
+;; TODO remove specifics about the type of data from this namespace
+;;
 (ns pi.handlers.chsk
   (:require [pi.models.state :refer [app-state]]
             [pi.util :as util]

@@ -1,3 +1,11 @@
+;; Client <-> Server Application Data Communications
+;;
+;; Verbs
+;; =================
+;; Submit (new data)
+;; Update (user state)
+;; TODO remove specifics about the type of data from this namespace
+;;
 (ns pi.handlers.chsk 
   (:require [clojure.core.cache :as cache]
             [taoensso.sente :as s]
