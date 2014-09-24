@@ -45,13 +45,22 @@
        t-coerce/from-long
        (t/after? (-> lookback t/days t/ago))))
 
+(defn sort-messages-by-distance
+  ([msgs loc]
+   (sort-messages-by-distance <))
+  ([msgs loc f]
+   (let [set-distance! #(assoc % :distance
+                               (util/distance loc (:location %)))
+         calcd  (map set-distance! msgs)
+         sorted (sort-by :distance f calcd)
+         cleand (map #(dissoc % :distance) sorted)]
+     cleand)))
+
 (defn furthest-message [msgs loc]
-  (let [set-distance! #(assoc % :distance
-                              (util/distance loc (:location %)))
-        calcd  (map set-distance! msgs)
-        sorted (sort-by :distance > calcd)
-        max-msg (first sorted)]
-    (dissoc max-msg :distance)))
+  (first (sort-messages-by-distance msgs loc >)))
+
+(defn closest-message [msgs loc]
+  (first (sort-messages-by-distance msgs loc <)))
 
 (defn calc-radius
   "What matters is not just the number of messages within a radius,
@@ -84,15 +93,15 @@
                (calc-radius msgs loc (* lookback 2)))
 
            :else
-           (inc (:distance (furthest-message recent-msgs loc))))))
+           (util/distance loc
+                  (:location (furthest-message recent-msgs loc))))))
      0.0)))
 
 (defn in-radius?
   [radius loc1 loc2]
   (if (and (util/coordinate? loc1) (util/coordinate? loc2))
     (<= (util/distance loc1 loc2) radius)
-    (do (println "invalid! " loc1 loc2)
-        nil)))
+    false))
 
 (defn local-messages [loc msgs]
   (let [radius (calc-radius msgs loc)
