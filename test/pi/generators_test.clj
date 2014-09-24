@@ -1,5 +1,6 @@
-(ns pi.tests.generators
-  (:require [clojure.test.check.generators :as gen]))
+(ns pi.generators-test
+  (:require [clojure.test.check.generators :as gen]
+            [pi.models.core :refer :all]))
 
 (def coordinate-gen
   (gen/fmap (partial apply ->Coordinate)

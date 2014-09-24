@@ -49,9 +49,9 @@
   (let [set-distance! #(assoc % :distance
                               (util/distance loc (:location %)))
         calcd  (map set-distance! msgs)
-        sorted (sort-by :distance calcd)
-        max-msg (first (max-key :distance sorted))]
-    max-msg))
+        sorted (sort-by :distance > calcd)
+        max-msg (first sorted)]
+    (dissoc max-msg :distance)))
 
 (defn calc-radius
   "What matters is not just the number of messages within a radius,
@@ -91,7 +91,8 @@
   [radius loc1 loc2]
   (if (and (util/coordinate? loc1) (util/coordinate? loc2))
     (<= (util/distance loc1 loc2) radius)
-    (println "invalid! " loc1 loc2)))
+    (do (println "invalid! " loc1 loc2)
+        nil)))
 
 (defn local-messages [loc msgs]
   (let [radius (calc-radius msgs loc)

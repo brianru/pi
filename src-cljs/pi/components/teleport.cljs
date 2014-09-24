@@ -48,6 +48,7 @@
       (let [{:keys [place location messages]} (:teleport app)]
         (dom/div #js {:className "container"}
           (om/build navbar (select-keys app [:user :nav]))
+          (dom/h4 nil place)
           (dom/h4 nil (util/display-location location))
           (dom/div #js {:className "teleport-input row"}
             (dom/div #js {:className "col-lg-6"}

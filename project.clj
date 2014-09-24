@@ -38,6 +38,7 @@
                  [geo-clj "0.3.15"]
                  ]
   :min-lein-version "2.3.3"
+  :test-paths ["test"]
   :main pi.main
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-marginalia "0.8.0"]]
