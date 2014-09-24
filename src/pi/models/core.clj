@@ -107,7 +107,7 @@
   (let [radius (calc-radius msgs loc)
         local  (filter #(in-radius? radius loc (:location %)) msgs)]
   ;  (println "radius: " radius)
-  ;  (println "local messages: " (count local) "/" (count msgs))
+;    (println "local messages: " (count local) "/" (count msgs))
     (sort-by :mid > local)))
 
 (defn local-users [loc msgs users]

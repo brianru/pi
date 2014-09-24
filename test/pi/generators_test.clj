@@ -1,12 +1,14 @@
 (ns pi.generators-test
   (:require [clojure.test.check.generators :as gen]
+            [geo.core :as geo]
+            [pi.util :as util]
             [pi.models.core :refer :all]))
 
 (def coordinate-gen
   (gen/fmap (partial apply ->Coordinate)
             (gen/tuple
-              gen/pos-int ;; latitude
-              gen/pos-int ;; longitude
+              (gen/choose -90.0 90.0) ;; latitude
+              (gen/choose -90.0 90.0) ;; longitude
               )))
 
 (def user-gen

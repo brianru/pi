@@ -49,8 +49,6 @@
     (let [local-msgs (local-messages loc msgs)]
       (>= (count local-msgs) (min 50 (count msgs))))))
 
-(test #'big-enough-radius)
-
 (defspec shrinking-radius ;; add a msg within the radius, radius should shrink
   1000
   (prop/for-all [[msgs loc msg*] msgs-loc-msg*-gen]
