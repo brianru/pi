@@ -49,12 +49,7 @@
   ([msgs loc]
    (sort-messages-by-distance <))
   ([msgs loc f]
-   (let [set-distance! #(assoc % :distance
-                               (util/distance loc (:location %)))
-         calcd  (map set-distance! msgs)
-         sorted (sort-by :distance f calcd)
-         cleand (map #(dissoc % :distance) sorted)]
-     cleand)))
+   (sort-by #(util/distance loc (:location %)) f msgs))))
 
 (defn furthest-message [msgs loc]
   (first (sort-messages-by-distance msgs loc >)))
