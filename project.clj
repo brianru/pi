@@ -3,13 +3,14 @@
   :url "http://example.com/FIXME"
   :license {:name "MIT"
             :url ""}
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2341"]
+  :dependencies [[org.clojure/clojure "1.6.0"] ;; upgrade to 1.7 alpha
+                 [org.clojure/clojurescript "0.0-2356"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+                 [com.stuartsierra/component "0.2.2"]
                  [org.clojure/core.cache "0.6.4"]
                  [org.clojure/core.memoize "0.5.6"]
-                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [environ "1.0.0"]
-                 [com.taoensso/encore "1.9.1"]
+                 [com.taoensso/encore "1.11.3"]
                  [org.clojure/data.json "0.2.5"]
 
                  ;; TODO [com.taoensso/tower "3.0.1"]
@@ -20,15 +21,15 @@
 
                  ;; Web communications
                  [ring/ring-core "1.3.1"]
-                 [ring/ring-defaults "0.1.1"]
+                 [ring/ring-defaults "0.1.2"]
                  [javax.servlet/servlet-api "2.5"]
-                 [http-kit "2.1.18"]
-                 [com.taoensso/sente "1.1.0"]
-                 [compojure "1.1.9"]
+                 [http-kit "2.1.19"]
+                 [com.taoensso/sente "1.2.0"]
+                 [compojure "1.2.0"]
 
-                 ;; Database
-                 [org.clojure/java.jdbc "0.3.5"]
-                 [postgresql/postgresql "8.4-702.jdbc4"]
+                 ;; Database TODO
+                 [me.raynes/conch "0.8.0"]
+                 [com.datomic/datomic-free "0.9.4899"]
 
                  ;; Client application
                  [om "0.7.3"]
@@ -41,7 +42,8 @@
   :test-paths ["test"]
   :main pi.main
   :plugins [[lein-cljsbuild "1.0.3"]
-            [lein-marginalia "0.8.0"]]
+            [lein-ancient "0.5.5"]
+            [lein-marginalia "0.8.0"]]  
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
   :profiles {:dev {}
              :uberjar {:aot :all
