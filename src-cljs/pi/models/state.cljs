@@ -37,8 +37,6 @@
             :side :left
             :restricted true}]
      :notifications [] ;; {:path "/" :name "Alert!"}
-     :location {:latitude nil
-                :longitude nil}
      :post ""
      :messages (list) 
      :votes    (list)

@@ -3,10 +3,10 @@
 ;; other namespaces and does not work.
 ;;
 (ns pi.handlers.async
-  (:require [clojure.core.async :refer [<! <!! chan go go-loop thread]]))
+  (:require [com.stuartsierra.component :as component]
+            [clojure.core.async :refer [<! <!! chan go go-loop thread]]))
 
 ;; -> IN ->
-(def submit (chan 1))
 (go-loop []
          (when-let [new-data (<! submit)]
            (dosync
@@ -17,15 +17,28 @@
                (>! increment [:new/post new-data]))))
          (recur))
 
-(def update (chan (sliding-buffer 3)))
 (go-loop []
          (when-let [new-data (<! update)]
            (ref-set data-store (assoc @data-store uid user)))
          (recur))
 
 ;; <- OUT <-
-(def increment (chan 1))
-(def swap (chan 1))
 
-;; setup handlers based on a keyword
+;; this could be made more generic - or at least the description can
+;; be
+(def verbs {;; client -> server
+            :submit '(chan 1)
+            :update '(chan (sliding-buffer 3))
+            ;; server -> client
+            :increment '(chan 1)
+            :swap '(chan 1)})
 
+(defrecord Verbs []
+  component/Lifecycle
+  (start [this]
+    (println "starting verb channels")
+    (merge this (into {} (map (fn [[k v] [k (eval v)]]) verbs))))
+  
+  (stop [this]
+    (println "stopping verb channels")
+    (merge this (zipmap (keys verbs) (repeat nil)))))

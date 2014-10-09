@@ -2,16 +2,16 @@
 ;;
 ;; 
 (ns pi.handlers.http
-  (:require [org.httpkit.server           :as kit]
+  (:require [com.stuartsierra.component   :as component]
+            [org.httpkit.server           :as kit]
             [ring.middleware.defaults     :refer :all]
             [ring.middleware.anti-forgery :as ring-anti-forgery]
             [crypto.password.scrypt       :as pw]
-            [environ.core                 :refer [env]]
             (compojure [core              :refer [defroutes GET POST]]
                        [route             :as route])
             [pi.models.core               :refer [all-users ->User]]
             [pi.views.layout              :as layout]
-            [pi.handlers.chsk :refer [ring-ajax-get-ws ring-ajax-post]]))
+            ))
 
 (defn register! [ring-request]
   (let [{:keys [session params]} ring-request
@@ -45,37 +45,46 @@
         {:keys [user-id]} params]
     {:status 200 :session (assoc session :uid "")}))
 
-(defroutes routes ;; NOTE only supply port env var if deployed
-  (GET  "/"        req (if (env :port)
-                         (layout/prod-app)
-                         (layout/test-app)))
-  (POST "/register"   req (register! req))
-  (POST "/login"   req (login! req))
-  (POST "/logout"  req (logout! req))
-
-  ;; These two connect the http and chsk servers.
-  (GET  "/chsk"    req (#'ring-ajax-get-ws req))
-  (POST "/chsk"    req (#'ring-ajax-post req))
-
-  (route/files "" {:root "resources/public"})
-  (route/not-found "<p>Page not found.</p>"))
-
+(defn stop-server! [server]
+  (when-let [stop-f @server]
+    (println "stopping http server")
+    (stop-f :timeout 100)))
+    
 (defn custom-get-token [req] (-> req :params :csrf-token))
 
-(def my-ring-handler
-  (let [defaults  site-defaults
-        defaults* (assoc-in defaults [:security :anti-forgery]
-                           {:read-token custom-get-token})]
-    (wrap-defaults routes defaults*)))
+(defrecord HttpServer [port env server chsk-server]
+  component/Lifecycle
+  (start [this]
+    (println "starting http server")
+    (stop-server! server)
 
-(defonce server_ (atom nil))
-(defn stop-server! []
-  (when-let [stop-f @server_]
-    (stop-f :timeout 100)))
+    (defroutes routes
+      (GET  "/"         req (if (= env "prod")
+                              (layout/prod-app)
+                              (layout/test-app)))
+      (POST "/register" req (register! req))
+      (POST "/login"    req (login! req))
+      (POST "/logout"   req (logout! req))
 
-(defn start-server! []
-  (stop-server!)
-  (let [port (Integer. (or (env :port) "9899"))
-        s    (kit/run-server (var my-ring-handler) {:port port})]
-    (reset! server_ s)
-    (println "Http-kit server is running on port" port)))
+      (GET  "/chsk"     req ((:ajax-get-ws chsk-server) req))
+      (POST "/chsk"     req ((:ajax-post-ws chsk-server) req))
+
+      (route/files "" {:root "resources/public"})
+      (route/not-found "<p>Page not found.</p>"))
+
+    (let [defaults (assoc-in site-defaults [:security :anti-forgery]
+                             {:read-token custom-get-token})
+          my-ring-handler (wrap-defaults routes defaults)
+          s (kit/run-server #'my-ring-handler {:port port})]
+      (println "http server is running in" env "on port" port)
+      (assoc this :server s)))
+
+  (stop [this]
+    (stop-server!)
+    (assoc this :server (atom nil))))
+
+(defn http-server [port env]
+  (map->HttpServer {:port port
+                    :env  env
+                    :server (atom nil)
+                    :chsk-server nil}))

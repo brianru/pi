@@ -7,7 +7,8 @@
 ;; TODO remove specifics about the type of data from this namespace
 ;;
 (ns pi.handlers.chsk 
-  (:require [clojure.core.cache :as cache]
+  (:require [com.stuartsierra.component :as component]
+            [clojure.core.cache :as cache]
             [taoensso.sente :as s]
             [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
@@ -120,8 +121,24 @@
                                                :location location
                                                :messages messages}])))))
 
-(defonce    router_ (atom nil))
-(defn  stop-router! [] (when-let [stop-f @router_] (stop-f)))
-(defn start-router! []
-  (stop-router!)
-  (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler*)))
+(defn stop-server! [server]
+  (when-let [stop-f @server]
+    (println "stopping chsk server")
+    (stop-f)))
+
+(defrecord ChskServer [server]
+  component/Lifecycle
+  (start [this]
+    (println "starting chsk server")
+    (stop-server! server)
+    (let [s (s/start-chsk-router! ch-chsk event-msg-handler*)]
+      (assoc this :server s))
+
+    (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler*)))
+
+  (stop [this]
+    (stop-server! server)
+    (assoc this :server (atom nil))))
+
+(defn chsk-server []
+  (->ChskServer (atom nil)))

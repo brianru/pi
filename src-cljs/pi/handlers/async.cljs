@@ -8,12 +8,11 @@
 ;;
 (ns pi.handlers.async
   (:require-macros
-            [cljs.core.async.macros :as asyncm :refer [go go-loop]])
+    [cljs.core.async.macros :as asyncm :refer [go go-loop]])
   (:require [cljs.core.async :as async :refer [put! chan <! >!
                                                sliding-buffer]]
             [pi.handlers.chsk :refer [chsk chsk-send! chsk-state]]
-            [pi.models.state :refer [app-state]]
-            ))
+            [pi.models.state :refer [app-state]]))
 
 ;; TODO what if i map ids to their path in app-state
 ;; instead of the noun?
@@ -29,7 +28,7 @@
 
 (defn unseen?
   "The order of cond clauses is important.
-  
+
   Votes and comments are on messages, so they contain message ids,
   therefore the presence of their ids must be checked before message ids.
 
@@ -62,18 +61,18 @@
 (def increment (chan 1) (comp (map #(assoc-distance %))
                               (filter unseen?)))
 (go-loop []
-   (when-let [value (<! increment)]
-     (swap! app-state assoc noun
-            (cons value (get @app-state noun))))
-   (recur))
+         (when-let [value (<! increment)]
+           (swap! app-state assoc noun
+                  (cons value (get @app-state noun))))
+         (recur))
 
 (def swap (chan 1) (comp (map #(assoc-distance %))))
 (go-loop []
-   (when-let [new-data (<! swap)]
-     ;; sometimes noun is :messages, but with teleport it's
-     ;; [:teleport :messages]
-     (swap! app-state assoc noun new-data))
-   (recur))
+         (when-let [new-data (<! swap)]
+           ;; sometimes noun is :messages, but with teleport it's
+           ;; [:teleport :messages]
+           (swap! app-state assoc noun new-data))
+         (recur))
 
 ;; <- OUT <-
 (def submit (chan 1))

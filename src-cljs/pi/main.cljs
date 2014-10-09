@@ -1,5 +1,6 @@
 (ns pi.main
   (:require [pi.models.state :refer [app-state]]
+            [pi.handlers.async :as async]
             [pi.components.runway :refer [runway-view]]
             [pi.components.gateway :refer [gateway-view]]
             [pi.components.local :refer [local-view]]
@@ -28,7 +29,9 @@
 ;; this code feels like a ghosttown.
 
 (defn render-page [component state target]
-  (om/root component state {:target target}))
+  (om/root component state {:target target
+                            :shared {:submit async/submit
+                                     :update async/update}}))
 
 (defn refresh-navigation [new-path]
   (let [set-active (fn [nav]
