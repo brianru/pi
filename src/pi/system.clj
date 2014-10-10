@@ -7,7 +7,7 @@
 (defn system [config-options]
   (let [{:keys [port env]} config-options]
     (component/system-map
-     :db          (database "localhost" 2170)
+     :db          (database "localhost" 4334)
      :chsk-server (chsk-server)
      :http-server (component/using (http-server port env)
                                    {:chsk-server :chsk-server})
