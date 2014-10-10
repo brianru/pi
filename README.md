@@ -21,6 +21,8 @@ Users will also be able to travel through time, because why not?
 - [Leiningen.](http://leiningen.org/) That's it.
 
 ### How To
+**NOTE this is changing -- adding Datomic ->> gotta have a transactor
+running**
 
 #### Local
 ```bash
