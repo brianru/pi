@@ -28,7 +28,6 @@
                  [compojure "1.2.0"]
 
                  ;; Database TODO
-                 [me.raynes/conch "0.8.0"]
                  [com.datomic/datomic-free "0.9.4899"]
 
                  ;; Client application
@@ -46,8 +45,9 @@
             [lein-ancient "0.5.5"]
             [lein-marginalia "0.8.0"]]  
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
-  :profiles {:dev {:datomic {:config "resources/free-transactor-template.properties"
-                             :db-uri "datomic:free://localhost:2170/pi"}}
+  :profiles {:dev {:datomic {:config "resources/datomic/free-transactor-template.properties"
+                             :db-uri "datomic:free://localhost:4334/pi"
+                             :install-location "/"}}
              :uberjar {:aot :all
                        :jar-name "pi.jar"
                        :uberjar-name "uberpi.jar"

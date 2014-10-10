@@ -1,21 +1,9 @@
 (ns pi.models.datomic
-  (:require [me.raynes.conch.low-level :as sh]
-            [datomic.api :refer [q db] :as d]
+  (:require [datomic.api :refer [q db] :as d]
             [com.stuartsierra.component :as component]))
 
-(def transactor-properties
-  "resources/free-transactor-template.properties")
-
-(defn- start-transactor [config]
-  (let [p (sh/proc "/usr/local/bin/datomic-transactor" config)]
-    (while true
-      (try
-        (sh/stream-to-out p :out)
-        (catch Exception e (println (str e)))))))
-
 (defn- connect-to-database [host port]
-  (let [uri "datomic:free://localhost:2170/pi"]
-    ;(start-transactor transactor-properties)
+  (let [uri (str "datomic:free://" host ":" port "/pi")]
     (d/delete-database uri)
     (d/create-database uri)
     (d/connect uri)))
@@ -30,15 +18,8 @@
 
   (stop [component]
     (println "stopping database")
-;    (.close connection)
     (if connection
       (assoc component :connection nil))))
 
 (defn database [host port]
   (map->Database {:host host :port port}))
-
-(def _db (database "localhost" 2170))
-
-(def _db (component/start _db))
-
-(println _db)
