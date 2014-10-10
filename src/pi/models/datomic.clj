@@ -34,5 +34,5 @@
     (if connection
       (assoc component :connection nil))))
 
-(defn new-database [host port]
+(defn database [host port]
   (map->Database {:host host :port port}))

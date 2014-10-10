@@ -75,7 +75,7 @@
     (let [defaults (assoc-in site-defaults [:security :anti-forgery]
                              {:read-token custom-get-token})
           my-ring-handler (wrap-defaults routes defaults)
-          s (kit/run-server #'my-ring-handler {:port port})]
+          s (kit/run-server my-ring-handler {:port port})]
       (println "http server is running in" env "on port" port)
       (assoc this :server s)))
 

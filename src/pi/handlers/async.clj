@@ -7,20 +7,20 @@
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]))
 
 ;; -> IN ->
-(go-loop []
-         (when-let [new-data (<! submit)]
-           (dosync
-             (ref-set data-store (conj @data-store new-data))
-             (doseq [user (local-users (:location data)
-                                       @data-store
-                                       (connected-users))]
-               (>! increment [:new/post new-data]))))
-         (recur))
-
-(go-loop []
-         (when-let [new-data (<! update)]
-           (ref-set data-store (assoc @data-store uid user)))
-         (recur))
+;(go-loop []
+;         (when-let [new-data (<! submit)]
+;           (dosync
+;             (ref-set data-store (conj @data-store new-data))
+;             (doseq [user (local-users (:location data)
+;                                       @data-store
+;                                       (connected-users))]
+;               (>! increment [:new/post new-data]))))
+;         (recur))
+;
+;(go-loop []
+;         (when-let [new-data (<! update)]
+;           (ref-set data-store (assoc @data-store uid user)))
+;         (recur))
 
 ;; <- OUT <-
 
@@ -37,7 +37,7 @@
   component/Lifecycle
   (start [this]
     (println "starting verb channels")
-    (merge this (into {} (map (fn [[k v] [k (eval v)]]) verbs))))
+    (merge this (into {} (map (fn [[k v]] [k (eval v)]) verbs))))
   
   (stop [this]
     (println "stopping verb channels")

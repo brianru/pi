@@ -49,7 +49,7 @@
   ([msgs loc]
    (sort-messages-by-distance <))
   ([msgs loc f]
-   (sort-by #(util/distance loc (:location %)) f msgs))))
+   (sort-by #(util/distance loc (:location %)) f msgs)))
 
 (defn furthest-message [msgs loc]
   (first (sort-messages-by-distance msgs loc >)))

@@ -12,8 +12,9 @@
             [taoensso.sente :as s]
             [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
-            [pi.models.core :refer [all-msgs all-users
-                                    next-mid local-messages local-users]]
+            [pi.models.core :refer [all-msgs all-users all-votes
+                                    next-mid next-vid
+                                    local-messages local-users]]
             ;; too much about the data model is leaking out
             [pi.util :as util]
             ))
@@ -132,9 +133,7 @@
     (println "starting chsk server")
     (stop-server! server)
     (let [s (s/start-chsk-router! ch-chsk event-msg-handler*)]
-      (assoc this :server s))
-
-    (reset! router_ (s/start-chsk-router! ch-chsk event-msg-handler*)))
+      (assoc this :server s)))
 
   (stop [this]
     (stop-server! server)
