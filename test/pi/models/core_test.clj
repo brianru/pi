@@ -1,4 +1,4 @@
-(ns pi.main-test
+(ns pi.models.core-test
   (:require [clojure.test :refer :all]
             [clojure.test.check.generators :as tc]
             [clojure.test.check.generators :as gen]
@@ -7,7 +7,7 @@
             [pi.util :as util]
             [pi.generators-test :refer :all]
             [pi.models.core :refer :all]
-            [pi.main :refer :all]))
+            ))
 
 (defspec furthest-was-included
   1000
