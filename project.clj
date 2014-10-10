@@ -4,7 +4,7 @@
   :license {:name "MIT"
             :url ""}
   :dependencies [[org.clojure/clojure "1.6.0"] ;; upgrade to 1.7 alpha
-                 [org.clojure/clojurescript "0.0-2356"]
+                 [org.clojure/clojurescript "0.0-2371"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [com.stuartsierra/component "0.2.2"]
                  [org.clojure/core.cache "0.6.4"]
@@ -41,11 +41,13 @@
   :min-lein-version "2.3.3"
   :test-paths ["test"]
   :main pi.main
-  :plugins [[lein-cljsbuild "1.0.3"]
+  :plugins [[lein-datomic "0.2.0"]
+            [lein-cljsbuild "1.0.3"]
             [lein-ancient "0.5.5"]
             [lein-marginalia "0.8.0"]]  
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
-  :profiles {:dev {}
+  :profiles {:dev {:datomic {:config "resources/free-transactor-template.properties"
+                             :db-uri "datomic:free://localhost:2170/pi"}}
              :uberjar {:aot :all
                        :jar-name "pi.jar"
                        :uberjar-name "uberpi.jar"

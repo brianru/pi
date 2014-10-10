@@ -14,8 +14,8 @@
         (catch Exception e (println (str e)))))))
 
 (defn- connect-to-database [host port]
-  (let [uri (str "datomic:free://" host ":" port "/" (d/squuid))]
-    (start-transactor transactor-properties)
+  (let [uri "datomic:free://localhost:2170/pi"]
+    ;(start-transactor transactor-properties)
     (d/delete-database uri)
     (d/create-database uri)
     (d/connect uri)))
@@ -36,3 +36,9 @@
 
 (defn database [host port]
   (map->Database {:host host :port port}))
+
+(def _db (database "localhost" 2170))
+
+(def _db (component/start _db))
+
+(println _db)
