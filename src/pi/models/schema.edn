@@ -1,0 +1,150 @@
+[;; Locations
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :location/latitude
+  :db/valueType   :db.type/float
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :location/longitude
+  :db/valueType   :db.type/float
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;; Users
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :user/id
+  :db/unique      :db.unique/value
+  :db.valueType   :db.type/uuid
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :user/name
+  :db/unique      :db.unique/value
+  :db.valueType   :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :user/password
+  :db.valueType   :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/noHistory   true
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :user/location
+  :db.valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :user/radius
+  :db.valueType   :db.type/float
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;; Posts
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :post/id
+  :db/unique      :db.unique/value
+  :db/valueType   :db.type/uuid
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ 
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :post/user
+  :db/valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :post/contents
+  :db/valueType   :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :post/time
+  :db/valueType   :db.type/instant
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :post/location
+  :db/valueType   :db.type/ref
+  :db.cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;; Votes
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :vote/id
+  :db/unique      :db.unique/value
+  :db/valueType   :db.type/uuid
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :vote/message
+  :db/valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :vote/user
+  :db/valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :vote/time
+  :db/valueType   :db.type/instant
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :vote/location
+  :db/valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ 
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;; Comments
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/id
+  :db/unique      :db.unique/value
+  :db/valueType   :db.type/uuid
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/message
+  :db/valeuType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/user
+  :db/valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/time
+  :db/valueType   :db.type/instant
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ 
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/location
+  :db/valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/attribute :db.part/db}
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ]
