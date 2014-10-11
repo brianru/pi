@@ -4,7 +4,8 @@
 ;;
 (ns pi.handlers.async
   (:require [com.stuartsierra.component :as component]
-            [clojure.core.async :refer [<! <!! chan go go-loop thread]]))
+            [clojure.core.async :refer [chan go go-loop close!
+                                        sliding-buffer]]))
 
 ;; -> IN ->
 ;(go-loop []
@@ -41,4 +42,5 @@
   
   (stop [this]
     (println "stopping verb channels")
+    (map close! this)
     (merge this (zipmap (keys verbs) (repeat nil)))))

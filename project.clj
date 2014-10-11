@@ -3,7 +3,7 @@
   :url "http://example.com/FIXME"
   :license {:name "MIT"
             :url ""}
-  :dependencies [[org.clojure/clojure "1.6.0"] ;; upgrade to 1.7 alpha
+  :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2371"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [com.stuartsierra/component "0.2.2"]
@@ -27,7 +27,7 @@
                  [com.taoensso/sente "1.2.0"]
                  [compojure "1.2.0"]
 
-                 ;; Database TODO
+                 ;; Database
                  [com.datomic/datomic-free "0.9.4899"]
 
                  ;; Client application
