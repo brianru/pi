@@ -1,23 +1,32 @@
 (ns pi.communications.gateway
   (:require [com.stuartsierra.component :as component]
-            [crypto.password.scrypt :as pw]))
+            [crypto.password.scrypt :as pw]
+            [datomic.api :as d]))
 
-(defn register! [db username password]
+(defn register! [{:keys [conn]} username password]
   (let [hash-pass (pw/encrypt password)
-        user      nil] ;;try to get user from db
-    (if-not user
-      nil ;; add user to db
+        user      (d/q '[:find ?e
+                         :in $ ?username
+                         :where [?e :user/name ?username]]
+                       (d/db conn)
+                       username)]
+    (if (empty? user)
+      @(d/transact conn
+                   [{:db/id (d/tempid :db.part/user)
+                     :user/id (d/squuid)
+                     :user/name username
+                     :user/password hash-pass}])
       false)))
-;        (ref-set all-users
-;                 (assoc @all-users user-id
-;                        (->User user-id
-;                                hash-pass
-;                                {:latitude nil :longitude nil}
-;                                nil)))
 
 (defn login! [{:keys [conn] :as db} username password]
-  (let [user nil] ;; todo get user from db
-    (if-let [cur-pass (:password user)]
+  (let [user (d/entity (d/db conn)
+                       (ffirst
+                        (d/q '[:find ?e
+                               :in $ ?username
+                               :where [?e :user/name ?username]]
+                             (d/db conn)
+                             username)))]
+    (if-let [cur-pass (:user/password user)]
       (pw/check password cur-pass)
       false)))
 
