@@ -1,10 +1,10 @@
-(ns pi.communications.gateway-test
+(ns pi.comm.gateway-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]]
-            [pi.communications.gateway :refer :all]
+            [pi.comm.gateway :refer :all]
             [datomic.api :as d]
             [pi.data.datomic :refer [database]]))
 

@@ -2,7 +2,7 @@
 ;; This namespace is full of exploratory code that is not referenced by
 ;; other namespaces and does not work.
 ;;
-(ns pi.communications.private
+(ns pi.comm.private
   (:require [com.stuartsierra.component :as component]
             [clojure.core.async :refer [chan go go-loop close!
                                         sliding-buffer]]))

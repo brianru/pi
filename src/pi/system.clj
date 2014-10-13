@@ -2,8 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             [pi.server.chsk :refer [chsk-server]]
             [pi.server.http :refer [http-server]]
-            [pi.communications.private :refer [private]]
-            [pi.communications.gateway :refer [gateway]]
+            [pi.comm.private :refer [private]]
+            [pi.comm.gateway :refer [gateway]]
             [pi.data.datomic :refer [database]]))
 
 (defn system

@@ -1,4 +1,4 @@
-(ns pi.communications.gateway
+(ns pi.comm.gateway
   (:require [com.stuartsierra.component :as component]
             [crypto.password.scrypt :as pw]
             [datomic.api :as d]))
