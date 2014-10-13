@@ -6,7 +6,11 @@
   (let [uri (str "datomic:free://" host ":" port "/pi")]
     (d/delete-database uri)
     (d/create-database uri)
-    (d/connect uri)))
+    (let [conn (d/connect uri)]
+      @(d/transact conn (read-string (slurp "src/pi/models/schema.edn")))
+      conn)))
+
+(def conn (connect-to-database "localhost" 4334))
 
 (defrecord Database [host port connection]
   component/Lifecycle
@@ -23,3 +27,7 @@
 
 (defn database [host port]
   (map->Database {:host host :port port}))
+
+(def _d (database "localhost" 4334))
+
+(def _db (component/start _d))

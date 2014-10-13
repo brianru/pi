@@ -16,33 +16,33 @@
  {:db/id #db/id[:db.part/db]
   :db/ident       :user/id
   :db/unique      :db.unique/value
-  :db.valueType   :db.type/uuid
+  :db/valueType   :db.type/uuid
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]
   :db/ident       :user/name
   :db/unique      :db.unique/value
-  :db.valueType   :db.type/string
+  :db/valueType   :db.type/string
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]
   :db/ident       :user/password
-  :db.valueType   :db.type/string
+  :db/valueType   :db.type/string
   :db/cardinality :db.cardinality/one
   :db/noHistory   true
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]
   :db/ident       :user/location
-  :db.valueType   :db.type/ref
+  :db/valueType   :db.type/ref
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]
   :db/ident       :user/radius
-  :db.valueType   :db.type/float
+  :db/valueType   :db.type/float
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -76,7 +76,7 @@
  {:db/id #db/id[:db.part/db]
   :db/ident       :post/location
   :db/valueType   :db.type/ref
-  :db.cardinality :db.cardinality/one
+  :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -124,7 +124,7 @@
 
  {:db/id #db/id[:db.part/db]
   :db/ident       :comment/message
-  :db/valeuType   :db.type/ref
+  :db/valueType   :db.type/ref
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
 
@@ -144,7 +144,7 @@
   :db/ident       :comment/location
   :db/valueType   :db.type/ref
   :db/cardinality :db.cardinality/one
-  :db.install/attribute :db.part/db}
+  :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ]
