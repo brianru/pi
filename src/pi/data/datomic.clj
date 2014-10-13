@@ -10,20 +10,18 @@
       @(d/transact conn (read-string (slurp "src/pi/data/schema.edn")))
       conn)))
 
-(def conn (connect-to-database "localhost" 4334))
-
-(defrecord Database [host port connection]
+(defrecord Database [host port conn]
   component/Lifecycle
   (start [component]
     (println "starting database")
-    (if (not connection)
+    (if (not conn)
       (let [conn (connect-to-database host port)]
-        (assoc component :connection conn))))
+        (assoc component :conn conn))))
 
   (stop [component]
     (println "stopping database")
-    (if connection
-      (assoc component :connection nil))))
+    (if conn
+      (assoc component :conn nil))))
 
 (defn database [host port]
   (map->Database {:host host :port port}))

@@ -15,7 +15,7 @@
 ;                                {:latitude nil :longitude nil}
 ;                                nil)))
 
-(defn login! [db username password]
+(defn login! [{:keys [conn] :as db} username password]
   (let [user nil] ;; todo get user from db
     (if-let [cur-pass (:password user)]
       (pw/check password cur-pass)
@@ -35,4 +35,4 @@
     (assoc this :fns nil)))
 
 (defn gateway []
-  (Gateway.))
+  (Gateway. nil))

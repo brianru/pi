@@ -12,14 +12,14 @@
             ))
 
 (defn register! [gateway ring-request]
-  (let [{:keys [session]} ring-request
+  (let [{:keys [session params]} ring-request
         {:keys [user-id password]} params]
     (if ((:register gateway) user-id password)
       {:status 200 :session (assoc session :uid user-id)}
       {:status 401})))
 
 (defn login! [gateway ring-request]
-  (let [{:keys [session]} ring-request
+  (let [{:keys [session params]} ring-request
         {:keys [user-id password]} params]
     (if ((:login gateway) user-id password)
       {:status 200 :session (assoc session :uid user-id)}

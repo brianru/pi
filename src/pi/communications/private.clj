@@ -27,23 +27,23 @@
 
 ;; this could be made more generic - or at least the description can
 ;; be
-(def *verbs* {;; client -> server
-              :submit '(chan 1)
-              :update '(chan (sliding-buffer 3))
-              ;; server -> client
-              :increment '(chan 1)
-              :swap '(chan 1)})
+(def verbs {;; client -> server
+            :submit '(chan 1)
+            :update '(chan (sliding-buffer 3))
+            ;; server -> client
+            :increment '(chan 1)
+            :swap '(chan 1)})
 
-(defrecord Verbs [db]
+(defrecord Private [db]
   component/Lifecycle
   (start [this]
     (println "starting verb channels")
-    (merge this (into {} (map (fn [[k v]] [k (eval v)]) *verbs*))))
+    (merge this (into {} (map (fn [[k v]] [k (eval v)]) verbs))))
   
   (stop [this]
     (println "stopping verb channels")
     (map #(-> % last close!) this)
-    (merge this (zipmap (keys *verbs*) (repeat nil)))))
+    (merge this (zipmap (keys verbs) (repeat nil)))))
 
 (defn private []
-  (Verbs.))
+  (Private. nil))
