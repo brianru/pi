@@ -34,7 +34,7 @@
               :increment '(chan 1)
               :swap '(chan 1)})
 
-(defrecord Verbs []
+(defrecord Verbs [db]
   component/Lifecycle
   (start [this]
     (println "starting verb channels")
@@ -45,5 +45,5 @@
     (map #(-> % last close!) this)
     (merge this (zipmap (keys *verbs*) (repeat nil)))))
 
-(defn verbs []
+(defn private []
   (Verbs.))

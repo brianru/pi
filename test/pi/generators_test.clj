@@ -2,7 +2,7 @@
   (:require [clojure.test.check.generators :as gen]
             [geo.core :as geo]
             [pi.util :as util]
-            [pi.models.core :refer :all]))
+            [pi.data.core :refer :all]))
 
 (def coordinate-gen
   (gen/fmap (partial apply ->Coordinate)

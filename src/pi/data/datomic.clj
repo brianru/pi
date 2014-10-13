@@ -27,7 +27,3 @@
 
 (defn database [host port]
   (map->Database {:host host :port port}))
-
-(def _d (database "localhost" 4334))
-
-(def _db (component/start _d))

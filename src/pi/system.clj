@@ -6,18 +6,25 @@
             [pi.communications.gateway :refer [gateway]]
             [pi.data.datomic :refer [database]]))
 
-(defn system [config-options]
+(defn system
+  "Design guidelines:
+   - inject dependencies into components where the data originates
+   - TODO when to build sub-systems?
+   "
+  [config-options]
   (let [{:keys [port env]} config-options]
     (component/system-map
      ;; data layer
-     :db          (database "localhost" 4334)
+     :db (database "localhost" 4334)
+     ;; TODO core ns component as db interface layer?
 
      ;; comms layer
-     :private-comms (verbs)
-     :gateway-comms (gateway)
+     :private-comms (component/using (private) {:db :db})
+     :gateway-comms (component/using (gateway) {:db :db})
 
      ;; server layer
-     ;; TODO should this be a sub-system instead of 2 components?
-     :chsk-server (chsk-server)
+     :chsk-server (component/using (chsk-server)
+                                   {:comms :private-comms})
      :http-server (component/using (http-server port env)
-                                   {:chsk-server :chsk-server}))))
+                                   {:comms :gateway-comms
+                                    :chsk-server :chsk-server}))))

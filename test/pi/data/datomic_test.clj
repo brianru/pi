@@ -1,7 +1,7 @@
-(ns pi.models.datomic-test
+(ns pi.data.datomic-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
-            [pi.models.datomic :refer :all]))
+            [pi.data.datomic :refer :all]))
 
 (defn- fresh-db []
   (database "localhost" 4334))

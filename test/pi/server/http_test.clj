@@ -1,7 +1,7 @@
-(ns pi.handlers.http-test
+(ns pi.server.http-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
-            [pi.handlers.http :refer :all]))
+            [pi.server.http :refer :all]))
 
 (defn- fresh-server []
   (http-server 8091 "test"))

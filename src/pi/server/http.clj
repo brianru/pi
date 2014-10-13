@@ -6,43 +6,29 @@
             [org.httpkit.server           :as kit]
             [ring.middleware.defaults     :refer :all]
             [ring.middleware.anti-forgery :as ring-anti-forgery]
-            [crypto.password.scrypt       :as pw]
             (compojure [core              :refer [defroutes GET POST]]
                        [route             :as route])
-            [pi.data.core                 :refer [all-users ->User]]
             [pi.server.views.layout       :as layout]
             ))
 
-(defn register! [ring-request]
-  (let [{:keys [session params]} ring-request
-        {:keys [user-id password]} params
-        hash-pass (pw/encrypt password)]
-    (if (get @all-users user-id)
-      {:status 401}
-      (dosync
-        (ref-set all-users
-                 (assoc @all-users user-id
-                        (->User user-id
-                                hash-pass
-                                {:latitude nil :longitude nil}
-                                nil)))
-        {:status 200 :session (assoc session :uid user-id)}))))
-
-(defn login! [ring-request]
-  (let [{:keys [session params]} ring-request
+(defn register! [gateway ring-request]
+  (let [{:keys [session]} ring-request
         {:keys [user-id password]} params]
-    (dosync
-      (let [user (get @all-users user-id)
-            good (if-let [cur-pass (:password user)]
-                   (pw/check password cur-pass)
-                   false)]
-        (if good
-          {:status 200 :session (assoc session :uid user-id)}
-          {:status 401})))))
+    (if ((:register gateway) user-id password)
+      {:status 200 :session (assoc session :uid user-id)}
+      {:status 401})))
 
-(defn logout! [ring-request]
+(defn login! [gateway ring-request]
+  (let [{:keys [session]} ring-request
+        {:keys [user-id password]} params]
+    (if ((:login gateway) user-id password)
+      {:status 200 :session (assoc session :uid user-id)}
+      {:status 401})))
+
+(defn logout! [gateway ring-request]
   (let [{:keys [session params]} ring-request
         {:keys [user-id]} params]
+    ((:logout gateway) user-id)
     {:status 200 :session (assoc session :uid "")}))
 
 (defn stop-server! [server]
@@ -52,7 +38,7 @@
     
 (defn custom-get-token [req] (-> req :params :csrf-token))
 
-(defrecord HttpServer [port env server chsk-server]
+(defrecord HttpServer [port env server chsk-server gateway]
   component/Lifecycle
   (start [this]
     (println "starting http server")
@@ -62,11 +48,11 @@
       (GET  "/"         req (if (= env "prod")
                               (layout/prod-app)
                               (layout/test-app)))
-      (POST "/register" req (register! req))
-      (POST "/login"    req (login! req))
-      (POST "/logout"   req (logout! req))
+      (POST "/register" req (register! gateway req))
+      (POST "/login"    req (login!    gateway req))
+      (POST "/logout"   req (logout!   gateway req))
 
-      (GET  "/chsk"     req ((:ajax-get-ws chsk-server) req))
+      (GET  "/chsk"     req ((:ajax-get-ws  chsk-server) req))
       (POST "/chsk"     req ((:ajax-post-ws chsk-server) req))
 
       (route/files "" {:root "resources/public"})
