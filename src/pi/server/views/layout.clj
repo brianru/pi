@@ -1,4 +1,4 @@
-(ns pi.views.layout
+(ns pi.server.views.layout
   (:require [hiccup.page :refer [html5 include-css include-js]]))
 
 (defn- head []

@@ -1,7 +1,7 @@
 ;; Client <-> Server Resources and Authentication Communications
 ;;
 ;; 
-(ns pi.handlers.http
+(ns pi.server.http
   (:require [com.stuartsierra.component   :as component]
             [org.httpkit.server           :as kit]
             [ring.middleware.defaults     :refer :all]
@@ -9,8 +9,8 @@
             [crypto.password.scrypt       :as pw]
             (compojure [core              :refer [defroutes GET POST]]
                        [route             :as route])
-            [pi.models.core               :refer [all-users ->User]]
-            [pi.views.layout              :as layout]
+            [pi.data.core                 :refer [all-users ->User]]
+            [pi.server.views.layout       :as layout]
             ))
 
 (defn register! [ring-request]

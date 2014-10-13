@@ -2,7 +2,7 @@
 ;; This namespace is full of exploratory code that is not referenced by
 ;; other namespaces and does not work.
 ;;
-(ns pi.handlers.async
+(ns pi.communications.private
   (:require [com.stuartsierra.component :as component]
             [clojure.core.async :refer [chan go go-loop close!
                                         sliding-buffer]]))
@@ -27,20 +27,23 @@
 
 ;; this could be made more generic - or at least the description can
 ;; be
-(def verbs {;; client -> server
-            :submit '(chan 1)
-            :update '(chan (sliding-buffer 3))
-            ;; server -> client
-            :increment '(chan 1)
-            :swap '(chan 1)})
+(def *verbs* {;; client -> server
+              :submit '(chan 1)
+              :update '(chan (sliding-buffer 3))
+              ;; server -> client
+              :increment '(chan 1)
+              :swap '(chan 1)})
 
 (defrecord Verbs []
   component/Lifecycle
   (start [this]
     (println "starting verb channels")
-    (merge this (into {} (map (fn [[k v]] [k (eval v)]) verbs))))
+    (merge this (into {} (map (fn [[k v]] [k (eval v)]) *verbs*))))
   
   (stop [this]
     (println "stopping verb channels")
     (map #(-> % last close!) this)
-    (merge this (zipmap (keys verbs) (repeat nil)))))
+    (merge this (zipmap (keys *verbs*) (repeat nil)))))
+
+(defn verbs []
+  (Verbs.))

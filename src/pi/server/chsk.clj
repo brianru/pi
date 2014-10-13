@@ -6,15 +6,15 @@
 ;; Update (user state)
 ;; TODO remove specifics about the type of data from this namespace
 ;;
-(ns pi.handlers.chsk 
+(ns pi.server.chsk 
   (:require [com.stuartsierra.component :as component]
             [clojure.core.cache :as cache]
             [taoensso.sente :as s]
             [clojure.string :refer [blank?]]
             [clojure.core.async :refer [<! <!! chan go go-loop thread]]
-            [pi.models.core :refer [all-msgs all-users all-votes
-                                    next-mid next-vid
-                                    local-messages local-users]]
+            [pi.data.core :refer [all-msgs all-users all-votes
+                                  next-mid next-vid
+                                  local-messages local-users]]
             ;; too much about the data model is leaking out
             [pi.util :as util]
             ))

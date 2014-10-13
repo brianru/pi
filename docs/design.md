@@ -15,3 +15,17 @@ Verb + Noun should suffice for a listener to identity itself on a
 broadcast channel
 
 How can an ontology define WHAT must be done with such messages?
+
+Can a predicate, a verb, have an implementation?
+
+
+
+Data Layer
+
+Comms Layer
+
+Server Layer
+
+Where is the business logic?
+
+Where do we put the login/logout/register functions?

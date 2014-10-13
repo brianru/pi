@@ -1,4 +1,4 @@
-(ns pi.models.datomic
+(ns pi.data.datomic
   (:require [datomic.api :refer [q db] :as d]
             [com.stuartsierra.component :as component]))
 
@@ -7,7 +7,7 @@
     (d/delete-database uri)
     (d/create-database uri)
     (let [conn (d/connect uri)]
-      @(d/transact conn (read-string (slurp "src/pi/models/schema.edn")))
+      @(d/transact conn (read-string (slurp "src/pi/data/schema.edn")))
       conn)))
 
 (def conn (connect-to-database "localhost" 4334))

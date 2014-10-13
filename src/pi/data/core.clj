@@ -1,4 +1,4 @@
-(ns pi.models.core
+(ns pi.data.core
   (:require [pi.util :as util]
             [clj-time.coerce :as t-coerce]
             [clj-time.core :as t]))
