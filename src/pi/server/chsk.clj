@@ -1,10 +1,7 @@
-;; Client <-> Server Application Data Communications
-;;
 ;; Verbs
 ;; =================
 ;; Submit (new data)
 ;; Update (user state)
-;; TODO remove specifics about the type of data from this namespace
 ;;
 (ns pi.server.chsk 
   (:require [com.stuartsierra.component :as component]
@@ -18,20 +15,6 @@
             ;; too much about the data model is leaking out
             [pi.util :as util]
             ))
-
-;; Create channel for communicating with clients
-;; and bind send/receive functions to local names.
-(let [{:keys [ch-recv
-              send-fn
-              ajax-post-fn
-              ajax-get-or-ws-handshake-fn
-              connected-uids]}
-      (s/make-channel-socket! {})]
-  (def ring-ajax-post   ajax-post-fn)
-  (def ring-ajax-get-ws ajax-get-or-ws-handshake-fn)
-  (def ch-chsk          ch-recv)
-  (def chsk-send!       send-fn)
-  (def connected-uids   connected-uids))
 
 (defn connected-users
   "Get all connected users."
@@ -122,22 +105,37 @@
                                                :location location
                                                :messages messages}])))))
 
-(defn stop-server! [server]
-  (when-let [stop-f @server]
+(defn stop-server! [router]
+  (when-let [stop-f @router]
     (println "stopping chsk server")
     (stop-f)))
 
-(defrecord ChskServer [server]
+(defrecord ChskServer [;ring-ajax-post
+                       ;ring-ajax-get-or-ws-handshake
+                       ch-chsk
+                       chsk-send!
+                       connected-uids
+                       router
+                       handler]
   component/Lifecycle
   (start [this]
     (println "starting chsk server")
     (stop-server! server)
-    (let [s (s/start-chsk-router! ch-chsk event-msg-handler*)]
-      (assoc this :server s)))
+    (let [{:keys [ch-recv send-fn
+                  ;ajax-post-fn
+                  ;ajax-get-or-ws-handshake-fn
+                  connected-uids]}
+          (s/make-channel-socket! {})]
+      (assoc this
+     ;  :ring-ajax-post ajax-post-fn
+     ;  :ring-ajax-get-or-ws-handshake ring-ajax-get-or-ws-handshake-fn
+             :ch-chsk ch-recv
+             :chsk-send! send-fn
+             :connected-uids connected-uids
+             :router (atom (s/start-chsk-router! ch-recv handler)))))
 
   (stop [this]
-    (stop-server! server)
-    (assoc this :server (atom nil))))
+    (assoc this :router (stop-server! server))))
 
 (defn chsk-server []
-  (->ChskServer (atom nil)))
+  (map->ChskServer {:handler event-msg-handler*}))

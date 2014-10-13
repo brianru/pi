@@ -29,3 +29,7 @@ Server Layer
 Where is the business logic?
 
 Where do we put the login/logout/register functions?
+
+A gateway communications layer.
+
+A private communications layer.

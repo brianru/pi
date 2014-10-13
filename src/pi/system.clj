@@ -18,8 +18,14 @@
      :db (database "localhost" 4334)
      ;; TODO core ns component as db interface layer?
 
+     ;; logic layer / core / business logic
+     :core-in  (component/using (in)  {:comms :private-comms})
+     :core-out (component/using (out) {:comms :private-comms})
+
      ;; comms layer
-     :private-comms (component/using (private) {:db :db})
+     :private-comms (component/using (private)
+                                     {:db :db
+                                      :chsk-server :chsk-server})
      :gateway-comms (component/using (gateway) {:db :db})
 
      ;; server layer

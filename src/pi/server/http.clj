@@ -52,8 +52,12 @@
       (POST "/login"    req (login!    gateway req))
       (POST "/logout"   req (logout!   gateway req))
 
-      (GET  "/chsk"     req ((:ajax-get-ws  chsk-server) req))
-      (POST "/chsk"     req ((:ajax-post-ws chsk-server) req))
+      (GET  "/chsk"     req ((-> chsk-server
+                                 :router deref :ajax-get-ws)
+                             req))
+      (POST "/chsk"     req ((-> chsk-server
+                                 :router deref :ajax-post-ws)
+                             req))
 
       (route/files "" {:root "resources/public"})
       (route/not-found "<p>Page not found.</p>"))
