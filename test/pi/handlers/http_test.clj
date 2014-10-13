@@ -4,7 +4,7 @@
             [pi.handlers.http :refer :all]))
 
 (defn- fresh-server []
-  (http-server 4121 "test"))
+  (http-server 8091 "test"))
 
 (defrecord MockChskServer []
   component/Lifecycle
@@ -37,9 +37,3 @@
 ;; get a ws
 
 (test-ns *ns*)
-
-(deftest stop
-  (is))
-
-(def a (component/start (fresh-mock-system)))
-(def b (component/stop a))

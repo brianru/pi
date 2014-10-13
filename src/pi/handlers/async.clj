@@ -42,5 +42,5 @@
   
   (stop [this]
     (println "stopping verb channels")
-    (map close! this)
+    (map #(-> % last close!) this)
     (merge this (zipmap (keys verbs) (repeat nil)))))

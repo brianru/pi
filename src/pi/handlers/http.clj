@@ -80,7 +80,7 @@
       (assoc this :server s)))
 
   (stop [this]
-    (stop-server!)
+    (stop-server! server)
     (assoc this :server (atom nil))))
 
 (defn http-server [port env]

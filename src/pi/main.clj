@@ -8,6 +8,6 @@
 (defn -main [& args]
   (let [port (Integer. (or (env :port) "9899"))
         env  (if (env :port) "prod" "test")]
-    (component/start
+    (component/start-system
      (system {:port port
               :env  env}))))
