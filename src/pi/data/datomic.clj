@@ -1,5 +1,6 @@
 (ns pi.data.datomic
-  (:require [datomic.api :refer [q db] :as d]
+  (:require [datomic.api :as d]
+            [crypto.password.scrypt :as pw]
             [com.stuartsierra.component :as component]))
 
 (defn- connect-to-database [host port]
@@ -25,3 +26,39 @@
 
 (defn database [host port]
   (map->Database {:host host :port port}))
+
+(comment ;; demo
+
+ (def conn (connect-to-database "localhost" 4334))
+
+ (def b (d/db conn))
+
+ ;; find all user-defined db functions
+ (d/q '[:find ?ident ?code
+        :where
+        [?e :db/ident ?ident]
+        [?e :db/fn ?code]
+        ]
+      b)
+ 
+ (d/q '[:find ?ident ?code
+        :where
+        [?e :db/ident ?ident]
+        [?e :db/valueType :db.type/fn
+        [?e :db/value ?code]]
+        ]
+      b)
+
+ (let [ent (d/entity b :post/submit)
+       _   (d/touch ent)] ;; b/c d/entity is lazy
+   ent)
+
+ (def postSubmit (:db/fn (d/entity b :post/submit)))
+
+ (postSubmit b {:db/id 3 :user/location 42} "apple butt")
+
+ (def userRegister (:db/fn (d/entity b :user/register)))
+ (userRegister b "brian" "rubinton")
+ 
+ 
+ )

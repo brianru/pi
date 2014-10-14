@@ -48,6 +48,41 @@
 
  ;; Register can be a db fn that returns a new user
  ;; Login can be a db fn that returns a login event entity
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :user/register
+  :db/fn
+  #db/fn {:lang "clojure"
+          :requires [crypto.password.scrypt :as pw]
+          :params [db username password]
+          :code (let [hash-pass (pw/encrypt password)
+                      user      (d/q '[:find ?e
+                                       :in $ ?username
+                                       :where [?e :user/name ?username]]
+                                     db
+                                     username)]
+                  (if (empty? user)
+                    [{:db/id (d/tempid :db.part/user)
+                      :user/id (d/squuid)
+                      :user/name username
+                      :user/password hash-pass}]))}
+  }
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :user/login
+  :db/fn
+  #db/fn {:lang "clojure"
+          :requires [crypto.password.scrypt :as pw]
+          :params [db username password]
+          :code (let [user (d/entity
+                            db (ffirst (d/q '[:find ?e
+                                              :in $ ?username
+                                              :where
+                                              [?e :user/name ?username]]
+                                            db username)))]
+                  (if-let [cur-pass (:user/password user)]
+                    (pw/check password cur-pass)
+                    false))}
+  }
 
 ; {:db/id #db/id[:db.part/db]
 ;  :db/ident       :user/out-fn
