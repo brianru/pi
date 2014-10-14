@@ -46,12 +46,15 @@
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
 
- {:db/id #db/id[:db.part/db]
-  :db/ident       :user/out-fn
-  :db/fn          #db/fn {:lang "clojure"
-                          :params [db e]
-                          :code _}
-  :db.install/_attribute :db.part/db}
+ ;; Register can be a db fn that returns a new user
+ ;; Login can be a db fn that returns a login event entity
+
+; {:db/id #db/id[:db.part/db]
+;  :db/ident       :user/out-fn
+;  :db/fn          #db/fn {:lang "clojure"
+;                          :params [db e]
+;                          :code _}
+;  :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Posts
@@ -96,17 +99,17 @@
                             :post/id id
                             :post/user (:db/id user) 
                             :post/contents contents
-                            :post/time (squuid-time-millis id)
+                            :post/time (d/squuid-time-millis id)
                             :post/location (:user/location user)}]
                   post)}
   }
  
- {:db/id #db/id[:db.part/db]
-  :db/ident       :post/out-fn
-  :db/fn          #db/fn {:lang "clojure"
-                          :params [db e]
-                          :code _}
-  }
+; {:db/id #db/id[:db.part/db]
+;  :db/ident       :post/out-fn
+;  :db/fn          #db/fn {:lang "clojure"
+;                          :params [db e]
+;                          :code _}
+;  }
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Votes
@@ -143,17 +146,25 @@
  
  {:db/id #db/id[:db.part/db]
   :db/ident       :vote/submit
-  :db/fn          #db/fn {:lang "clojure"
-                          :params [db user post]
-                          :code _}
-  :db.install/_attribute :db.part/db}
+  :db/fn
+  #db/fn {:lang "clojure"
+          :params [db user post]
+          :code (let [id (d/squuid)
+                      vote {:db/id (d/tempid :db.part/user)
+                            :vote/id id
+                            :vote/post (:db/id post)
+                            :vote/user (:db/id user)
+                            :vote/time (d/squuid-time-millis id)
+                            :vote/location (:user/location user)}]
+                  vote)}
+  }
  
- {:db/id #db/id[:db.part/db]
-  :db/ident       :comment/out-fn
-  :db/fn          #db/fn {:lang "clojure"
-                          :params [db e]
-                          :code _}
-  :db.install/_attribute :db.part/db}
+; {:db/id #db/id[:db.part/db]
+;  :db/ident       :comment/out-fn
+;  :db/fn          #db/fn {:lang "clojure"
+;                          :params [db e]
+;                          :code _}
+;  :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Comments
@@ -196,17 +207,26 @@
  
  {:db/id #db/id[:db.part/db]
   :db/ident       :comment/submit
-  :db/fn          #db/fn {:lang "clojure"
-                          :params [db user post contents]
-                          :code _}
-  :db.install/_attribute :db.part/db}
+  :db/fn
+  #db/fn {:lang "clojure"
+          :params [db user post contents]
+          :code (let [id (d/squuid)
+                      cmt {:db/id (d/tempid :db.part/user)
+                           :comment/id id
+                           :comment/post (:db/id post)
+                           :comment/user (:db/id user)
+                           :comment/contents contents
+                           :comment/time (d/squuid-time-millis id)
+                           :comment/location (:user/location user)}]
+                  cmt)}
+  }
  
- {:db/id #db/id[:db.part/db]
-  :db/ident       :comment/out-fn
-  :db/fn          #db/fn {:lang "clojure"
-                          :params [db e]
-                          :code _}
-  :db.install/_attribute :db.part/db}
+; {:db/id #db/id[:db.part/db]
+;  :db/ident       :comment/out-fn
+;  :db/fn          #db/fn {:lang "clojure"
+;                          :params [db e]
+;                          :code _}
+;  :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ]
