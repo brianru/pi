@@ -45,6 +45,13 @@
   :db/valueType   :db.type/float
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :user/out-fn
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db e]
+                          :code _}
+  :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Posts
@@ -78,6 +85,28 @@
   :db/valueType   :db.type/ref
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
+ 
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :post/submit
+  :db/fn
+  #db/fn {:lang "clojure"
+          :params [db user contents]
+          :code (let [id (d/squuid)
+                      post {:db/id (d/tempid :db.part/user)
+                            :post/id id
+                            :post/user (:db/id user) 
+                            :post/contents contents
+                            :post/time (squuid-time-millis id)
+                            :post/location (:user/location user)}]
+                  post)}
+  }
+ 
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :post/out-fn
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db e]
+                          :code _}
+  }
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Votes
@@ -89,7 +118,7 @@
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]
-  :db/ident       :vote/message
+  :db/ident       :vote/post
   :db/valueType   :db.type/ref
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
@@ -112,6 +141,19 @@
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
  
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :vote/submit
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db user post]
+                          :code _}
+  :db.install/_attribute :db.part/db}
+ 
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/out-fn
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db e]
+                          :code _}
+  :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Comments
@@ -123,7 +165,7 @@
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]
-  :db/ident       :comment/message
+  :db/ident       :comment/post
   :db/valueType   :db.type/ref
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
@@ -131,6 +173,12 @@
  {:db/id #db/id[:db.part/db]
   :db/ident       :comment/user
   :db/valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/contents
+  :db/valueType   :db.type/string
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
 
@@ -144,6 +192,20 @@
   :db/ident       :comment/location
   :db/valueType   :db.type/ref
   :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ 
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/submit
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db user post contents]
+                          :code _}
+  :db.install/_attribute :db.part/db}
+ 
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/out-fn
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db e]
+                          :code _}
   :db.install/_attribute :db.part/db}
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

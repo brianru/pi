@@ -1,38 +1,16 @@
-;; NOTE
-;; This namespace is full of exploratory code that is not referenced by
-;; other namespaces and does not work.
-;;
 (ns pi.comm.private
   (:require [com.stuartsierra.component :as component]
-            [clojure.core.async :refer [chan go go-loop close!
+            [clojure.core.async :refer [chan go go-loop close! pub
                                         sliding-buffer]]))
 
-;; -> IN ->
-;(go-loop []
-;         (when-let [new-data (<! submit)]
-;           (dosync
-;             (ref-set data-store (conj @data-store new-data))
-;             (doseq [user (local-users (:location data)
-;                                       @data-store
-;                                       (connected-users))]
-;               (>! increment [:new/post new-data]))))
-;         (recur))
-;
-;(go-loop []
-;         (when-let [new-data (<! update)]
-;           (ref-set data-store (assoc @data-store uid user)))
-;         (recur))
+;; [action noun value] -> [reaction noun value]
 
-;; <- OUT <-
-
-;; this could be made more generic - or at least the description can
-;; be
 (def verbs {;; client -> server
-            :submit '(chan 1)
-            :update '(chan (sliding-buffer 3))
+            :submit '(pub (chan 1) first)
+            :update '(pub (chan (sliding-buffer 3)) first)
             ;; server -> client
-            :increment '(chan 1)
-            :swap '(chan 1)})
+            :increment '(pub (chan 1) first)
+            :swap '(pub (chan 1) first)})
 
 (defrecord Private [db]
   component/Lifecycle

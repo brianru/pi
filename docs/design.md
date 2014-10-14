@@ -28,8 +28,12 @@ Server Layer
 
 Where is the business logic?
 
+pure functions referenced by go-loops
+
 Where do we put the login/logout/register functions?
 
 A gateway communications layer.
 
 A private communications layer.
+
+Abstract code, well-defined data.

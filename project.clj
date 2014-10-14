@@ -47,12 +47,15 @@
   :java-agents [[com.newrelic.agent.java/newrelic-agent "2.19.0"]]
   :profiles {:dev {:datomic {:config "resources/datomic/free-transactor-template.properties"
                              :db-uri "datomic:free://localhost:4334/pi"
-                             :install-location "/"}}
+                             :install-location "/"}
+                   :env {:api-keys
+                         {:google "AIzaSyAmmkhErSKLgONi0mEaNgxKtI25R5QIEeg"}}}
              :uberjar {:aot :all
                        :jar-name "pi.jar"
                        :uberjar-name "uberpi.jar"
                        :hooks [leiningen.cljsbuild]
-                       }
+                       :env {:api-keys
+                             {:google "AIzaSyAmmkhErSKLgONi0mEaNgxKtI25R5QIEeg"}}}
              :phonegap {}}
   :cljsbuild {:builds
               {:dev {:source-paths ["src-cljs/pi/"]

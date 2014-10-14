@@ -2,6 +2,7 @@
   (:require [geo.core :as geo]
             [clojure.data.json :as json]
             [org.httpkit.client :as http]
+            [environ.core :refer [env]]
             [clojure.core.async :refer [>!! <!! chan]]
             ))
 
@@ -31,7 +32,7 @@
 
   ([place chan]
    (let [endpoint "https://maps.googleapis.com/maps/api/geocode/json"
-         api-key  "AIzaSyAmmkhErSKLgONi0mEaNgxKtI25R5QIEeg"]
+         api-key  (get-in env [:api-keys :google])]
      (http/get endpoint {:query-params {:key api-key
                                         :address place}}
                #(let [res (-> %
@@ -45,3 +46,9 @@
                               :longitude (get res "lng")}]
                   (>!! chan result)))
      chan)))
+
+(defn mkeyword [ns-korks name]
+  (let [ns* (if (sequential? ns-korks)
+              (clojure.string/join "." ns-korks)
+              ns-korks)]
+    (keyword ns* (clojure.string/capitalize name))))
