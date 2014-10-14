@@ -1,3 +1,6 @@
+;; NOTE This schema should be generated programmatically from a
+;; high-level representation, such as RDF/OWL.
+
 [;; Locations
  {:db/id #db/id[:db.part/db]
   :db/ident       :location/latitude
@@ -84,12 +87,27 @@
                     false))}
   }
 
-; {:db/id #db/id[:db.part/db]
-;  :db/ident       :user/out-fn
-;  :db/fn          #db/fn {:lang "clojure"
-;                          :params [db e]
-;                          :code _}
-;  :db.install/_attribute :db.part/db}
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/out-fn
+  :db/fn
+  #db/fn {:lang "clojure"
+          :params [db e]
+          :code [[:swap :post (d/q '[:find ?e
+                                     :in $ ?uid
+                                     :where
+                                     [?e :post/user ?uid]]
+                                   db (:db/id e))]
+                 [:swap :vote (d/q '[:find ?e
+                                     :in $ ?uid
+                                     :where
+                                     [?e :vote/user ?uid]]
+                                   db (:db/id e))]
+                 [:swap :comment (d/q '[:find ?e
+                                        :in $ ?uid
+                                        :where
+                                        [?e :coment/user ?uid]]
+                                      db (:db/id e))]]}
+  }
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Posts
@@ -139,12 +157,12 @@
                   post)}
   }
  
-; {:db/id #db/id[:db.part/db]
-;  :db/ident       :post/out-fn
-;  :db/fn          #db/fn {:lang "clojure"
-;                          :params [db e]
-;                          :code _}
-;  }
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :post/out-fn
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db e]
+                          :code [:increment :post e]}
+  }
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Votes
@@ -194,12 +212,12 @@
                   vote)}
   }
  
-; {:db/id #db/id[:db.part/db]
-;  :db/ident       :comment/out-fn
-;  :db/fn          #db/fn {:lang "clojure"
-;                          :params [db e]
-;                          :code _}
-;  :db.install/_attribute :db.part/db}
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :vote/out-fn
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db e]
+                          :code [:increment :vote e]}
+  }
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ;; Comments
@@ -256,12 +274,12 @@
                   cmt)}
   }
  
-; {:db/id #db/id[:db.part/db]
-;  :db/ident       :comment/out-fn
-;  :db/fn          #db/fn {:lang "clojure"
-;                          :params [db e]
-;                          :code _}
-;  :db.install/_attribute :db.part/db}
+ {:db/id #db/id[:db.part/db]
+  :db/ident       :comment/out-fn
+  :db/fn          #db/fn {:lang "clojure"
+                          :params [db e]
+                          :code [:increment :comment e]}
+  }
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
  ]

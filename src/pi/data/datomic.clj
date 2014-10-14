@@ -60,5 +60,12 @@
  (def userRegister (:db/fn (d/entity b :user/register)))
  (userRegister b "brian" "rubinton")
  
+ ;;(d/transact conn '[[:user/register "brian" "rubinton"]])
+ (d/transact conn [{:db/id (d/tempid :db.part/user) :user/name "hannah" :user/password "rubinton"}])
+ 
+ (def tx-q (d/tx-report-queue conn))
+         (type tx-q)
+ (when-let [report (.poll tx-q)]
+   (println (:tx-data report)))
  
  )
